@@ -35,16 +35,35 @@ export default {
       setsCleared: 1,
       numSets: 3,
       numBoxes: 10,
+      currentHighscore: 0,
       gm: "Gamemode",
       diff: "Difficulty",
       colors: ["red", "orange", "yellow", "lime", "green", "teal", "aqua", "blue", "indigo", "violet"],
       message: "Choose a gamemode and difficulty, then press play!",
-      scoreBoard: [],
-      timerEnabled: false
+      menuMessage: "Choose a gamemode and difficulty, then press play!",
+      title: "OrderRace",
+      scoreBoard: { 
+        "Numbers": [0,0,0,0,0],
+        "Letters": [0,0,0,0,0],
+        "Colors": [0,0,0,0,0],
+        "PHD": [0,0,0,0,0]
+      },
+      sb: "Numbers:\n1: 0\n2: 0\n3: 0\n4: 0\n5: 0\n\nLetters:\n1: 0\n2: 0\n3: 0\n4: 0\n5: 0\n\nColors:\n1: 0\n2: 0\n3: 0\n4: 0\n5: 0\n\nPHD:\n1: 0\n2: 0\n3: 0\n4: 0\n5: 0",
+      sbButton: "Show Scoreboard",
+      order: "Lowest to Highest",
+      timerEnabled: false,
+      menuTimer: true
     };
   },
 
   watch: {
+    /*menuTimer(value){
+      if (value) {
+          setTimeout(() => {
+              this.timerCount += 0.05;
+          }, 50);
+      }
+    },*/
     timerEnabled(value) {
                 if (value) {
                     setTimeout(() => {
@@ -58,6 +77,7 @@ export default {
 
                     if (value > 0 && this.timerEnabled) {
                         setTimeout(() => {
+                            
                             this.timerCount += 0.05;
                             if (this.checkOrder()){
                               if (this.setsCleared >= this.numSets){
@@ -65,28 +85,16 @@ export default {
                                 this.message = "Victory!";
                                 this.change_all_color("green");
                                 this.timerEnabled = false;
-                                this.setsCleared = 0;
+                                this.setsCleared = 1;
+                                this.updateScoreboard(this.timerCount);
+                                document.getElementById("reset").className = "visible";
                                 //this.timerCount = 0;
                               } else {
                                 console.log('set cleared, updating vals');
                                 this.change_all_color("green");
                                 
                                 this.timerEnabled = false;
-                
-                                setTimeout(() => {
-                                  
-                                  this.change_all_color("#2345a9");
-                                  this.updateVals(this.diff, this.gm);
-                                  
-                                    
-                                  //}, 100);
-                                  
-                                  this.setsCleared ++;
-                                  
-                                  this.timerEnabled = true;
-                                  
-                                }, 600);
-                                
+                                document.getElementById("next").className="visible";
                                 
                               }
                               
@@ -109,8 +117,12 @@ export default {
   },
   methods: {
     play: function() {
-                this.timerEnabled = true;
-            },
+      this.setsCleared ++;
+      this.change_all_color("#2345a9");
+      this.updateVals(this.diff, this.gm);
+      this.timerEnabled = true;
+      document.getElementById("next").className = "gone";
+    },
 
     pause: function() {
         this.timerEnabled = false;
@@ -125,6 +137,49 @@ export default {
       }
     },
     
+    getScore: function(){
+      console.log("getting score of " + this.gm + " " + this.diff);
+      let index = Number(this.diff)-1;
+      switch (this.gm){
+        case "Numbers": return this.scoreBoard.Numbers[index]; break;
+        case "Letters": return this.scoreBoard.Letters[index]; break;
+        case "Colors": return this.scoreBoard.Colors[index]; break;
+        case "PHD": return this.scoreBoard.PHD[index]; break;
+        default: console.log("error: gm not set"); break;
+      }
+    },
+    updateScoreboard: function(time){
+      time = Math.round(time * 100)/100;
+      let index = Number(this.diff)-1;
+      let stb = 0;
+      switch (this.gm){
+        case "Numbers": stb = this.scoreBoard.Numbers[index]; break;
+        case "Letters": stb = this.scoreBoard.Letters[index]; break;
+        case "Colors": stb = this.scoreBoard.Colors[index]; break;
+        case "PHD": stb = this.scoreBoard.PHD[index]; break;
+        default: console.log("error: gm not set"); break;
+      }
+      if (time < stb || stb == 0){
+        switch (this.gm){
+          case "Numbers": this.scoreBoard.Numbers[index] = time; break;
+          case "Letters": this.scoreBoard.Letters[index] = time; break;
+          case "Colors": this.scoreBoard.Colors[index] = time; break;
+          case "PHD": this.scoreBoard.PHD[index] = time; break;
+          default: console.log("error: gm not set"); break;
+        }
+      }
+      this.sb = this.generate_scoreboard();
+    },
+    sb_toggle: function(){
+      if (this.sbButton == "Show Scoreboard"){
+        this.sbButton = "Hide Scoreboard";
+        document.getElementById("sb").className = "visible";
+      } else {
+        this.sbButton = "Show Scoreboard";
+        document.getElementById("sb").className = "gone";
+      }
+    },
+
     checkMove: function(e) {
       window.console.log("Future index: " + e.draggedContext.futureIndex);
     },
@@ -170,8 +225,9 @@ export default {
     },
     selectColor: function(colorNum, colors){
       if (colors < 1) colors = 1; // defaults to one color - avoid divide by zero
-      return "hsl(" + (colorNum * (360 / colors) % 360) + ",100%,50%)";
+      return "hsl(" + (colorNum * (345 / colors) % 345) + ",100%,50%)";
     },
+    
 
     generateVal: function(length, gm, i) {
       let result = '';
@@ -182,7 +238,7 @@ export default {
       
       let colors = this.colors;
       let counter = 0;
-      let c = ''
+      let c = '';
       let operation = 0;
       let num1 = 0;
       let num2 = 0;
@@ -230,9 +286,12 @@ export default {
           }
         } else if (gm == "Colors"){
           switch (length){
-            case '1': result = colors[Math.floor(Math.random() * colors.length)]; break;
+            //case '1': result = colors[Math.floor(Math.random() * colors.length)]; break;
+            case '1': let x = Math.floor(255/10 * (Math.floor(Math.random()*10)+1)); result = 'rgb('+x+', '+x+', '+x+ ')'; break;
             case '2': result = this.selectColor(Math.floor(Math.random() * 10), 10); break;
-            case '3': result = this.selectColor(Math.floor(Math.random() * 20), 10); break;
+            case '3': result = this.selectColor(Math.floor(Math.random() * 20), 20); break;
+            case '4': result = this.selectColor(Math.floor(Math.random() * 30), 30); break;
+            case '5': result = this.selectColor(Math.floor(Math.random() * 40), 40); break;
           }
           
         } else {
@@ -261,7 +320,17 @@ export default {
       
     },
     updateVals: function(difficulty, gm){
+      this.diff = difficulty;
+      this.gm = gm;
       if (difficulty != 'Difficulty' && gm != 'Gamemode'){
+        this.currentHighscore = this.getScore();
+        console.log("current highscore = " + this.currentHighscore);
+        setTimeout(() => {
+          if (this.timerEnabled == false){
+            document.getElementById("play").className="visible";
+          }
+        }, 10);
+        
         console.log('generating vals');
         this.clear();
         for (let i = 0; i < this.numBoxes; i++)  {
@@ -270,17 +339,24 @@ export default {
           let c = this.generateVal(difficulty, gm, i);
           //replace(c);
         }
+        let color_bar = document.getElementById('color_bar');
         if (gm == 'Colors'){
+          if (this.diff > 1){
+            if (this.order == 'Lowest to Highest'){
+              color_bar.className = "visible";
+            } else {
+              color_bar.className = "visible_flipped";
+            }
+          }
+          
           setTimeout(() => {
             for (let i in this.list) {
               this.change_one_color(this.list[i].name);
             }
           }, 10);
-        }/* else {
-          setTimeout(() => {
-            this.default_color();
-          }, 100);
-        }*/
+        } else {
+          color_bar.className = "gone";
+        }
         
       }
       
@@ -299,26 +375,35 @@ export default {
         //console.log('comparing ' + id0 + ' with ' + id1)
         if (gm == "PHD"){
           if (diff == 3){
-            id0 = this.list[i].name;
-            id1 = this.list[i+1].name;
-            if (this.deromanize(id0) > this.deromanize(id1)){
-              return false;
-            }
+            id0 = this.deromanize(this.list[i].name);
+            id1 = this.deromanize(this.list[i+1].name);
           } else if (diff == 4 || diff == 5){
             for (let x in this.list){
               console.log(this.list[x].name + ' evaluates to ' + evaluate(this.list[x].name));
             }
-            if (evaluate(id0) > evaluate(id1))
-              return false;
-          } else if (id0 > id1){
-            return false;
+            id0 = evaluate(id0);
+            id1 = evaluate(id1);
+            
           }
         }
-        if ((gm == "Numbers" || gm == "Letters") && id0 > id1){
-          return false;
+        
+        if (gm == "Colors"){
+          id0 = Number(id0.substring(4, id0.indexOf(',')));
+          id1 = Number(id1.substring(4, id1.indexOf(',')));
+          if (diff == 1){
+            id0 = 1000 - id0;
+            id1 = 1000 - id1;
+          }
         }
-        if (gm == "Colors" && colors.indexOf(id0) > colors.indexOf(id1)){
-          return false;
+
+        if (this.order == 'Lowest to Highest'){
+          if (id0 > id1){
+            return false;
+          }
+        } else {
+          if (id0 < id1){
+            return false;
+          }
         }
       }
       
@@ -342,6 +427,30 @@ export default {
     difficultydrop: function() {
       document.getElementById("difficulty").classList.toggle("show");
       //this.updateVals();
+    },
+    orderdrop: function() {
+      document.getElementById("order").classList.toggle("show");
+      //this.updateVals();
+    },
+    generate_scoreboard: function(){
+      let sb = "Numbers:\n";
+      for (let i = 0; i < 5; i++){
+        sb += "" + (i+1) + ": " + this.scoreBoard.Numbers[i] + "\n";
+      }
+      sb += "\nLetters:\n";
+      for (let i = 0; i < 5; i++){
+        sb += "" + (i+1) + ": " + this.scoreBoard.Letters[i] + "\n";
+      }
+      sb += "\nColors:\n";
+      for (let i = 0; i < 5; i++){
+        sb += "" + (i+1) + ": " + this.scoreBoard.Colors[i] + "\n";
+      }
+      sb += "\nPHD:\n";
+      for (let i = 0; i < 5; i++){
+        sb += "" + (i+1) + ": " + this.scoreBoard.PHD[i] + "\n";
+      }
+      console.log("generated scoreboard\n" + sb);
+      return sb;
     },
 
     change_all_color: function(color){
@@ -388,11 +497,25 @@ export default {
       this.diff = difficulty;
       this.gm = gm;
       console.log('set diff to ' + this.diff + ' and gm to ' + this.gm);
-      if (gm == "Colors"){
-        this.message = "Sort in ROYGBIV!";
+      if (this.order == 'Lowest to Highest'){
+        if (gm == "Colors"){
+          this.message = "Sort in ROYGBIV!";
+        } else {
+          this.message = "Sort from lowest to highest!";
+        }
       } else {
-        this.message = "Sort from lowest to highest!";
+        if (gm == "Colors"){
+          this.message = "Sort in VIBGYOR!";
+        } else {
+          this.message = "Sort from highest to lowest!";
+        }
       }
+      
+      
+      document.getElementById("dropContent").className = "gone";
+      document.getElementById("play").className = "gone";
+      document.getElementById("reset").className = "gone";
+      document.getElementById("sbButton").className = "gone";
       this.timerEnabled = true;
       
       
@@ -407,11 +530,19 @@ export default {
         }*/
         this.updateVals(this.diff, this.gm);
         this.default_color();
-        this.scoreBoard.push('New time: ' + this.timerCount);
+        //this.scoreBoard.push('New time: ' + this.timerCount);
         this.timerCount = 0.0;
+        this.message = this.menuMessage;
+        
+        document.getElementById("dropContent").className = "visible";
+        document.getElementById("play").className = "visible";
+        document.getElementById("reset").className = "gone";
+        document.getElementById("sbButton").className = "visible";
+        
+        
       } else {
         this.change_all_color('light blue');
-        //console.log("error: game running");
+        console.log("error: game running");
       }
     }
   }
@@ -468,36 +599,57 @@ onBeforeUpdate(() => {
 
 <template>
   <div id="menuContent">
-    <div class="dropdown">
-      <button @click="gamemodedrop(); updateVals(difficulty, gamemode)" class="dropbtn">{{ gamemode }}</button>
-      <div id="gamemode" class="dropdown-content">
-        <a href="#" @click="gamemode = 'Letters'; updateVals(difficulty, gamemode)">Letters</a>
-        <a href="#" @click="gamemode = 'Numbers'; updateVals(difficulty, gamemode)">Numbers</a>
-        <a href="#" @click="gamemode = 'Colors'; updateVals(difficulty, gamemode)">Colors</a>
-        <a href="#" @click="gamemode = 'PHD'; updateVals(difficulty, gamemode)">PHD</a>
-      </div>
-    </div>
-
-    <div class="dropdown">
-      <button @click="difficultydrop(); updateVals(difficulty, gamemode)" class="dropbtn">{{ difficulty }}</button>
-      <div id="difficulty" class="dropdown-content">
-        <a href="#" @click="difficulty = '1'; updateVals(difficulty, gamemode)">1</a>
-        <a href="#" @click="difficulty = '2'; updateVals(difficulty, gamemode)">2</a>
-        <a href="#" @click="difficulty = '3'; updateVals(difficulty, gamemode)">3</a>
-        <a href="#" @click="difficulty = '4'; updateVals(difficulty, gamemode)">4</a>
-        <a href="#" @click="difficulty = '5'; updateVals(difficulty, gamemode)">5</a>
-      </div>
-    </div>
-
-    <button id = "play" @click="gameloop(difficulty, gamemode)">Play!</button>
-    <button id = "reset" @click="reset()">Reset</button>
+    <h7> OrderRace </h7>
     <h1> {{  message }}</h1>
+    <button id = "reset" class = "gone" @click="reset()">Reset</button>
+    <div id="dropContent">
+      <h2>Gamemode:</h2>
+      <div class="dropdown">
+        <button @click="gamemodedrop(); updateVals(difficulty, gamemode)" class="dropbtn">{{ gamemode }}</button>
+        
+          <div id="gamemode" class="dropdown-content">
+            <a href="#" @click="gamemode = 'Letters'; updateVals(difficulty, gamemode)">Letters</a>
+            <a href="#" @click="gamemode = 'Numbers'; updateVals(difficulty, gamemode)">Numbers</a>
+            <a href="#" @click="gamemode = 'Colors'; updateVals(difficulty, gamemode)">Colors</a>
+            <a href="#" @click="gamemode = 'PHD'; updateVals(difficulty, gamemode)">PHD</a>
+          </div>
+        
+      </div>
+      <h2>Difficulty:</h2>
+      <div class="dropdown">
+        <button @click="difficultydrop(); updateVals(difficulty, gamemode)" class="dropbtn">{{ difficulty }}</button>
+        
+          <div id="difficulty" class="dropdown-content">
+            <a href="#" @click="difficulty = '1'; updateVals(difficulty, gamemode)">1</a>
+            <a href="#" @click="difficulty = '2'; updateVals(difficulty, gamemode)">2</a>
+            <a href="#" @click="difficulty = '3'; updateVals(difficulty, gamemode)">3</a>
+            <a href="#" @click="difficulty = '4'; updateVals(difficulty, gamemode)">4</a>
+            <a href="#" @click="difficulty = '5'; updateVals(difficulty, gamemode)">5</a>
+          </div>
+        
+      </div>
+      <h2>Order:</h2>
+      <div class="dropdown">
+        <button @click="orderdrop();" class="dropbtn">{{ order }}</button>
+        
+          <div id="order" class="dropdown-content">
+            <a href="#" @click="order = 'Lowest to Highest'; ">Lowest to Highest</a>
+            <a href="#" @click="order = 'Highest to Lowest'; ">Highest to Lowest</a>
+            
+          </div>
+        
+      </div>
+    </div>
+    <button id = "play" class = "gone" @click="gameloop(difficulty, gamemode)">Play!</button>
+    
+    
   </div>
   
   <div id="gameContent">
     <div class="col-6">
       
-        <h2>{{setsCleared}} / {{numSets}} : {{ Math.round(timerCount*100)/100 }}</h2>
+        <h5>{{setsCleared}} / {{numSets}} : {{ Math.round(timerCount*100)/100 }}</h5>
+        <button id = "next" class = "gone" @click="play()">Next</button>
           <h4><draggable
             :list="list"
             :disabled="!enabled"
@@ -522,8 +674,14 @@ onBeforeUpdate(() => {
     </div>
   </div>
   
-  <div id="colorBar">
-    <img alt="color bar" class="colors" src="./color_stripe.jpeg" width="600" height="60" />
+  <div id="rightBar">
+    <h2 id="highscore">Highscore: {{ currentHighscore }}</h2>
+    <img alt="color bar" id="color_bar" class="gone" src="./color_stripe.jpeg" width="60" height="600" />
+  </div>
+
+  <div id="scoreBar">
+    <button id = "sbButton" class = "visible" @click="sb_toggle()">{{ sbButton }}</button>
+    <h6 id="sb" class = "gone">{{ sb }}</h6>
   </div>
   
     
@@ -551,6 +709,7 @@ onBeforeUpdate(() => {
 .dropdown {
   position: relative;
   display: inline-block;
+  padding-bottom: 10px;
 }
 
 /* Dropdown Content (Hidden by Default) */
@@ -582,15 +741,22 @@ h1 {
   font-size: 1.6rem;
   position: static;
   top: -10px;
+  padding: 20px;
+  padding-bottom: 60px;
 }
 h2 {
-  margin-left: 0px
+  margin-left: 30px;
+  padding-bottom: 10px;
+  width: 40%;
+  float: left;
+  display: inline;
 }
 h3 {
-  border: 3px solid #ffffff;
+  border: 2px solid #ffffff;
   padding: 10px;
   margin: 10px;
   width: 200px;
+  height: 50px;
   text-align: center;
   color: black;
   background-color: #2345a9;
@@ -598,9 +764,30 @@ h3 {
 }
 h4 {
   position: static;
-  top: -100px;
+  margin-top: 25px;
   
 }
+
+h5 {
+  font-weight: 400;
+  font-size: 1.4rem;
+  float: left;
+  position: inline;
+  width: 70%;
+  
+}
+
+h6 {
+  font-weight: 300;
+  font-size: 0.9rem;
+}
+h7 {
+  font-weight: 600;
+  font-size: 4rem;
+  color: red;
+}
+
+
 .box {
   border: 1px solid #000;
   padding: 10px;
@@ -611,33 +798,87 @@ h4 {
   background-color: #f9f9f9;
 }
 
+.dropdown{
+  float: left;
+  display: inline;
+  width: 49%;
+}
+
 .ghost {
   opacity: 0.5;
+}
+.gone {
+  opacity: 0;
+  pointer-events: none;
+}
+.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+.visible_flipped {
+  opacity: 1;
+  pointer-events: auto;
+  transform: rotate(180deg);
 }
 
 #play{
   width: 100px;
+  height: 25px;
+  margin-top: 50px;
+  margin-left: 50px;
+}
+
+#reset{
+  width: 80px;
+  height: 20px;
+}
+
+#next{
+  margin-left: 0px;
 }
 
 #menuContent{
   float: left;
   display: inline;
-  width: 39%;
+  width: 30%;
 }
 #gameContent{
   float: left;
   display: middle;
-  width: 30%;
+  width: 23%;
   margin-left: 0px;
 }
-#colorBar{
-  float: right;
+#rightBar{
+  float: left;
   display: inline;
-  width: 30%;
-  transform: rotate(90deg);
-  margin-left: 0px;
-  margin-top: 100px;
-  opacity: 1;
+  width: 35%;
+  
+}
+#scoreBar{
+  float: left;
+  display: inline;
+  width: 10%;
+}
+#sbButton{
+  
+  width: 100%;
+}
+#sb{
+  float: left;
+  display: inline;
+  white-space: pre-line;
+  height: 80%
+}
+#highscore{
+  float: left;
+  display: inline;
+}
+#color_bar{
+  float: left;
+  display: inline;
+  margin-left: -200px;
+  margin-top: 50px;
+  
 }
 
 </style>
