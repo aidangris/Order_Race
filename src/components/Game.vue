@@ -2,11 +2,11 @@
 
 //export default {
 
-import { ref, defineComponent } from './vue';
-import { onBeforeUpdate, onBeforeMount } from './vue';
+import { ref, defineComponent } from 'vue';
+import { onBeforeUpdate, onBeforeMount } from 'vue';
 //import draggable from 'vuedraggable';
-import { VueDraggableNext } from './vue-draggable-next'
-import { evaluate } from './mathjs'
+import { VueDraggableNext } from 'vue-draggable-next'
+import { evaluate } from 'mathjs'
 //import { rotate } from 'pngjs'
 //let id = 0;
 
