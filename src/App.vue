@@ -9,7 +9,7 @@ import { getAnalytics } from "firebase/analytics";
 const firebaseConfig = {
   apiKey: "AIzaSyAdnqOqLtIBhdrf2dp3AxbvIs5TMTKg-5Q",
   authDomain: "orderrace-e1845.firebaseapp.com",
-  projectId: "orderrace-e1845",
+  projectId: "orderrace",
   storageBucket: "orderrace-e1845.appspot.com",
   messagingSenderId: "1015772696682",
   appId: "1:1015772696682:web:d4c3ac8c787780687ffa13",
@@ -23,21 +23,17 @@ const analytics = getAnalytics(app);
 </script>
 
 <template>
-  <div id="navbar">
+  <body>
+  <div id="app">
     <nav class="navbar navbar-expand navbar-dark bg-dark">
-      <a id="title" href="/" class="navbar-brand">Order Race</a>
+      <a id="title" href="/" class="navbar-brand">OrderRace</a>
       <div class="navbar-nav mr-auto">
         <li class="nav-item">
           <router-link to="/" class="nav-link">
             <font-awesome-icon icon="home" /> Home
           </router-link>
         </li>
-        <li v-if="showAdminBoard" class="nav-item">
-          <router-link to="/admin" class="nav-link">Admin Board</router-link>
-        </li>
-        <li v-if="showModeratorBoard" class="nav-item">
-          <router-link to="/mod" class="nav-link">Moderator Board</router-link>
-        </li>
+        
         <li class="nav-item">
           <router-link v-if="currentUser" to="/user" class="nav-link">User</router-link>
         </li>
@@ -71,19 +67,14 @@ const analytics = getAnalytics(app);
       </div>
     </nav>
 
-    <div class="container">
-      <router-view />
-    </div>
-  </div>
-  <!--<header>
-    <img alt="Vue logo" class="logo" src="./assets/logo.svg" width="125" height="125" />
-
     
-  </header>-->
-
-  <!--<main id="game">
-    <Game />
-  </main>-->
+  </div>
+  
+    <div class="container-fluid">
+        <router-view />
+      </div>
+ 
+  </body>
 </template>
 
 <script>
@@ -119,6 +110,10 @@ export default {
 <style scoped>
 header {
   line-height: 1.5;
+  
+}
+body{
+  background-color: rgb(73, 70, 70);
 }
 
 .logo {
@@ -126,22 +121,44 @@ header {
   margin: 0 auto 2rem;
 }
 
-#navbar{
-  margin-top: -375px;
-  margin-left: -155px;
-  height: 200px;
-  width: 1520px;
+.navbar-nav{
+  float: center;
+  display: inline;
+  text-align: center;
+  width: 50%;
+}
+.navbar{
+  display: block;
+  width: 20vw;
+}
+.container-fluid{
+  float: left;
+  display: inline;
+  margin-left: -0px;
+  width: 80vw;
+  background-color: rgb(73, 70, 70);
+  padding: 0px;
+  background-size: cover;
+}
+
+#app{
+  margin-top: 0px;
+  margin-left: -160px;
+  height: 100vh;
+  width: 20vw;
+  padding: 0px;
+  
 }
 #title{
+  text-align: center;
+  margin-left: 20px;
   color: red;
-  font-size: 2rem;
+  font-size: 3rem;
 }
 
-#game{
-  width: 1300px;
-}
 
-@media (min-width: 1024px) {
+
+@media (min-width: 100vw) {
   header {
     display: flex;
     place-items: center;
@@ -158,4 +175,6 @@ header {
     flex-wrap: wrap;
   }
 }
+
+
 </style>

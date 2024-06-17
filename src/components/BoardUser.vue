@@ -1,3 +1,5 @@
+
+
 <template>
   <div class="container">
     <header class="jumbotron">
@@ -8,6 +10,7 @@
 
 <script>
 import UserService from "../services/user.service";
+
 
 export default {
   name: "User",

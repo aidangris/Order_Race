@@ -599,11 +599,10 @@ onBeforeUpdate(() => {
 
 <template>
   <div id="menuContent">
-    <h7> OrderRace </h7>
     <h1> {{  message }}</h1>
     <button id = "reset" class = "gone" @click="reset()">Reset</button>
     <div id="dropContent">
-      <h2>Gamemode:</h2>
+      <h2>Gamemode: </h2>
       <div class="dropdown">
         <button @click="gamemodedrop(); updateVals(difficulty, gamemode)" class="dropbtn">{{ gamemode }}</button>
         
@@ -710,6 +709,8 @@ onBeforeUpdate(() => {
   position: relative;
   display: inline-block;
   padding-bottom: 10px;
+  padding-left: 10px;
+  width: 35%;
 }
 
 /* Dropdown Content (Hidden by Default) */
@@ -736,6 +737,13 @@ onBeforeUpdate(() => {
 /* Show the dropdown menu (use JS to add this class to the .dropdown-content container when the user clicks on the dropdown button) */
 .show {display:block;}
 
+.list-group-item{
+  height: 55px;
+  width: 200px;
+  background-color: transparent;
+  border-color: transparent;
+}
+
 h1 {
   font-weight: 500;
   font-size: 1.6rem;
@@ -748,6 +756,8 @@ h2 {
   margin-left: 30px;
   padding-bottom: 10px;
   width: 40%;
+  font-size: 1.9rem;
+  text-align: right;
   float: left;
   display: inline;
 }
@@ -755,6 +765,8 @@ h3 {
   border: 2px solid #ffffff;
   padding: 10px;
   margin: 10px;
+  margin-left: -20px;
+  margin-top: -10px;
   width: 200px;
   height: 50px;
   text-align: center;
@@ -782,11 +794,7 @@ h6 {
   font-weight: 300;
   font-size: 0.9rem;
 }
-h7 {
-  font-weight: 600;
-  font-size: 4rem;
-  color: red;
-}
+
 
 
 .box {
@@ -831,7 +839,7 @@ h7 {
 
 #reset{
   width: 80px;
-  height: 20px;
+  height: 40px;
 }
 
 #next{
@@ -841,24 +849,24 @@ h7 {
 #menuContent{
   float: left;
   display: inline;
-  width: 30%;
+  width: 27vw;
 }
 #gameContent{
   float: left;
   display: middle;
-  width: 23%;
-  margin-left: 0px;
+  width: 20vw;
+  margin-left: -50px;
 }
 #rightBar{
   float: left;
   display: inline;
-  width: 35%;
+  width: 20vw;
   
 }
 #scoreBar{
   float: left;
   display: inline;
-  width: 10%;
+  width: 8vw;
 }
 #sbButton{
   
@@ -868,7 +876,11 @@ h7 {
   float: left;
   display: inline;
   white-space: pre-line;
-  height: 80%
+  margin-top: 25px;
+  height: 80%;
+  font-weight: 400;
+  color: white;
+  font-size: 1.2rem;
 }
 #highscore{
   float: left;
