@@ -2,9 +2,8 @@ import * as Vue from 'vue';
 import { createRouter, createWebHistory } from "vue-router";
 import Game from "../components/Game.vue";
 import Profile from "../components/Profile.vue";
-import Register from "../components/Register.vue";
 import Login from "../components/Login.vue";
-import BoardUser from "../components/BoardUser.vue";
+import Register from "../components/Register.vue";
 
 //Vue.use(VueRouter);
 
@@ -28,18 +27,6 @@ const routes = [{
         name: "Profile",
         component: Profile,
     },
-    {
-        path: "/user",
-        name: "User",
-        component: BoardUser,
-    },
-    /*{
-            path: "/about",
-            name: "About",
-            component: () =>
-                //import ( /* webpackChunkName: "about" 
-        "../views/About.vue"),
-    },*/
 ];
 
 const router = createRouter({
@@ -48,7 +35,7 @@ const router = createRouter({
 });
 
 router.beforeEach((to, from, next) => {
-    const publicPages = ['/', '/login', '/register', '/profile'];
+    const publicPages = ['/', '/login', '/register', '/logout', '/profile'];
     const authRequired = !publicPages.includes(to.path);
     const loggedIn = localStorage.getItem('user');
 

@@ -7,6 +7,8 @@ import { onBeforeUpdate, onBeforeMount } from 'vue';
 //import draggable from 'vuedraggable';
 import { VueDraggableNext } from 'vue-draggable-next'
 import { evaluate } from 'mathjs'
+import { useStore } from 'vuex';
+import {computed} from "vue";
 //import { rotate } from 'pngjs'
 //let id = 0;
 
@@ -52,7 +54,10 @@ export default {
       sbButton: "Show Scoreboard",
       order: "Lowest to Highest",
       timerEnabled: false,
-      menuTimer: true
+      menuTimer: true,
+      user: computed(() => {
+        return store.getters.user;
+      })
     };
   },
 
@@ -171,6 +176,9 @@ export default {
       this.sb = this.generate_scoreboard();
     },
     sb_toggle: function(){
+      if (this.user.data.scoreboard != null){
+        this.scoreBoard = this.user.data.scoreboard;
+      }
       if (this.sbButton == "Show Scoreboard"){
         this.sbButton = "Hide Scoreboard";
         document.getElementById("sb").className = "visible";
@@ -647,7 +655,7 @@ onBeforeUpdate(() => {
   <div id="gameContent">
     <div class="col-6">
       
-        <h5>{{setsCleared}} / {{numSets}} : {{ Math.round(timerCount*100)/100 }}</h5>
+        <h5 id="timer">{{setsCleared}} / {{numSets}} : {{ Math.round(timerCount*100)/100 }}</h5>
         <button id = "next" class = "gone" @click="play()">Next</button>
           <h4><draggable
             :list="list"
@@ -844,6 +852,10 @@ h6 {
 
 #next{
   margin-left: 0px;
+  
+}
+#timer{
+  width: 120px;
 }
 
 #menuContent{
@@ -854,7 +866,7 @@ h6 {
 #gameContent{
   float: left;
   display: middle;
-  width: 20vw;
+  width: 25vw;
   margin-left: -50px;
 }
 #rightBar{
