@@ -1,5 +1,6 @@
 import { initializeApp } from "firebase/app";
-import { getAuth } from 'firebase/auth'
+import { getAuth } from 'firebase/auth';
+import { getDatabase, ref, set, onValue } from "firebase/database";
 
 
 
@@ -10,7 +11,8 @@ const firebaseConfig = {
     storageBucket: "orderrace-e1845.appspot.com",
     messagingSenderId: "1015772696682",
     appId: "1:1015772696682:web:d4c3ac8c787780687ffa13",
-    measurementId: "G-T37DNGN9Z1"
+    measurementId: "G-T37DNGN9Z1",
+    databaseURL: 'https://orderrace-e1845-default-rtdb.firebaseio.com'
 };
 
 // Initialize Firebase
@@ -18,6 +20,46 @@ const app = initializeApp(firebaseConfig);
 
 //initialize firebase auth
 const auth = getAuth(app);
+const db = getDatabase(app);
+//const usersRef = ref(db, '/users');
 
 
-export { app, auth }
+function writeScoreboard(name, scoreboard) {
+    const db = getDatabase();
+    set(ref(db, 'users/' + name), {
+        scoreboard: scoreboard
+    });
+}
+
+function writeDailyChallenge(name, gamemode, diff, order) {
+    const db = getDatabase();
+    set(ref(db, 'daily_challenge/' + name), {
+        gamemode: gamemode,
+        difficulty: diff,
+        order: order
+    });
+}
+
+function getDailyChallenge(name) {
+    const gmRef = ref(db, 'daily_challenge/' + name + '/gamemode');
+    const diffRef = ref(db, 'users/' + name + '/difficulty');
+    const orderRef = ref(db, 'users/' + name + '/difficulty');
+
+
+    let arr = [gmRef, diffRef, orderRef];
+
+    return arr;
+}
+
+function getScoreboard(name) {
+    const lettersRef = ref(db, 'users/' + name + '/scoreboard/Letters');
+    const numbersRef = ref(db, 'users/' + name + '/scoreboard/Numbers');
+    const colorsRef = ref(db, 'users/' + name + '/scoreboard/Colors');
+    const phdRef = ref(db, 'users/' + name + '/scoreboard/PHD');
+
+    let arr = [lettersRef, numbersRef, colorsRef, phdRef];
+
+    return arr;
+}
+
+export { app, auth, db, writeScoreboard, getScoreboard, writeDailyChallenge, getDailyChallenge }

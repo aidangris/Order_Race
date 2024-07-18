@@ -21,6 +21,9 @@ const store = createStore({
         },
         SET_USER(state, data) {
             state.user.data = data;
+        },
+        SET_SB(state, data) {
+            state.user.data.scoreboard = data;
         }
     },
     actions: {
@@ -28,7 +31,7 @@ const store = createStore({
             const response = await createUserWithEmailAndPassword(auth, email, password)
             if (response) {
                 context.commit('SET_USER', response.user)
-                response.user.updateProfile({
+                updateProfile(response.user, {
                     displayName: name,
                     scoreboard: {
                         "Numbers": [0, 0, 0, 0, 0],
@@ -42,10 +45,11 @@ const store = createStore({
             }
         },
 
-        async logIn(context, { email, password }) {
+        async logIn(context, { email, password, scoreboard }) {
             const response = await signInWithEmailAndPassword(auth, email, password)
             if (response) {
                 context.commit('SET_USER', response.user)
+                context.commit('SET_SB', scoreboard)
             } else {
                 throw new Error('login failed')
             }
@@ -61,7 +65,8 @@ const store = createStore({
             if (user) {
                 context.commit("SET_USER", {
                     displayName: user.displayName,
-                    email: user.email
+                    email: user.email,
+                    scoreboard: user.scoreboard
                 });
             } else {
                 context.commit("SET_USER", null);

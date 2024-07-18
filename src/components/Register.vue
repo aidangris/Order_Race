@@ -91,7 +91,13 @@ export default {
         await store.dispatch('register', {
           email: email.value,
           password: password.value,
-          name: name.value
+          name: name.value,
+          scoreboard: { 
+            "Numbers": [0,0,0,0,0],
+            "Letters": [0,0,0,0,0],
+            "Colors": [0,0,0,0,0],
+            "PHD": [0,0,0,0,0]
+          }
         })
         router.push('/')
       }

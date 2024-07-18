@@ -62,6 +62,7 @@ export default {
     setup() {
     const email = ref('')
     const password = ref('')
+    const scoreboard = ref('')
     const error = ref(null)
 
     const store = useStore()
@@ -71,7 +72,8 @@ export default {
       try {
         await store.dispatch('logIn', {
           email: email.value,
-          password: password.value
+          password: password.value,
+          scoreboard: scoreboard.value
         })
         router.push('/')
       }
@@ -79,7 +81,7 @@ export default {
         error.value = err.message
       }
     }
-    return { Login, email, password, error }
+    return { Login, email, password, scoreboard, error }
   }
 };
 </script>

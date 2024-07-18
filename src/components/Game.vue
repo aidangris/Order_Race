@@ -5,10 +5,12 @@
 import { ref, defineComponent } from 'vue';
 import { onBeforeUpdate, onBeforeMount } from 'vue';
 //import draggable from 'vuedraggable';
-import { VueDraggableNext } from 'vue-draggable-next'
+import { VueDraggableNext } from 'vue-draggable-next';
 import { evaluate } from 'mathjs'
 import { useStore } from 'vuex';
 import {computed} from "vue";
+import { db, getScoreboard, writeScoreboard, getDailyChallenge, writeDailyChallenge } from '../firebaseConfig.js';
+import { child, onValue, push } from 'firebase/database';
 //import { rotate } from 'pngjs'
 //let id = 0;
 
@@ -35,11 +37,12 @@ export default {
       dragging: false,
       timerCount: 0.0,
       setsCleared: 1,
-      numSets: 3,
+      numSets: 1,
       numBoxes: 10,
       currentHighscore: 0,
       gm: "Gamemode",
       diff: "Difficulty",
+      gmList: ["Numbers", "Letters", "Colors", "PHD"],
       colors: ["red", "orange", "yellow", "lime", "green", "teal", "aqua", "blue", "indigo", "violet"],
       message: "Choose a gamemode and difficulty, then press play!",
       menuMessage: "Choose a gamemode and difficulty, then press play!",
@@ -55,20 +58,67 @@ export default {
       order: "Lowest to Highest",
       timerEnabled: false,
       menuTimer: true,
+      startScoreboard: true,
+      dcGamemode: "",
+      dcDiff: "",
+      cdOrder: "",
+      dailyChallengeClock: true,
+      now: "",
+      store: useStore(),
       user: computed(() => {
-        return store.getters.user;
-      })
+        return this.store.getters.user;
+      }),
     };
   },
 
   watch: {
-    /*menuTimer(value){
+    dailyChallengeClock(value){
       if (value) {
-          setTimeout(() => {
-              this.timerCount += 0.05;
-          }, 50);
-      }
-    },*/
+                    setTimeout(() => {
+                        //this.timerCount += 0.05;
+                    }, 10000);
+                }
+    },
+    dailyChallengeClock: {
+                handler(value) {
+                  if (value > 0){
+                  setTimeout(() => {
+                    this.now = new Date();
+                    let str = String(this.now);
+                    let arr = str.split(" ");
+                    str = arr[0] + " " + arr[1] + " " + arr[2];
+                    console.log("current time = " + str);
+                    if (getDailyChallenge() == undefined){
+                      writeDailyChallenge();
+                    }
+                  }, 10000);
+                }
+                },
+                immediate: true // This ensures the watcher is triggered upon creation
+            },
+
+
+    startScoreboard(value){
+      if (value) {
+                    setTimeout(() => {
+                        //this.timerCount += 0.05;
+                    }, 1000);
+                }
+    },
+    startScoreboard: {
+                handler(value) {
+                  setTimeout(() => {
+                    if (value > 0 && this.startScoreboard) {
+                      this.getUserScoreboard();
+                      console.log("loaded user scoreboard");
+                      this.startScoreboard = false;
+                    }
+                  }, 1000);
+                },
+                immediate: true // This ensures the watcher is triggered upon creation
+            },
+
+
     timerEnabled(value) {
                 if (value) {
                     setTimeout(() => {
@@ -141,6 +191,89 @@ export default {
         this.list.pop();
       }
     },
+    writeDC: function(){
+      let gm = this.gmList[Math.floor(Math.random() * 4)];
+      let diff = String(Math.floor(Math.random() * 5) + 1);
+      writeDailyChallenge(this.now, gm, diff);
+    },
+    getDC: function(){
+      let refArr = getDailyChallenge(this.now);
+      if (refArr != undefined){
+        onValue(refArr[0], (snapshot) => {
+          console.log('snapshot', snapshot)
+          snapshot.forEach((childSnapshot) => {
+            console.log('childSnapshot.key: ', childSnapshot.key);
+            console.log('childSnapshot.val(): ', childSnapshot.val());
+            this.scoreBoard.Letters[childSnapshot.key] = childSnapshot.val();
+            })
+          }, {
+            onlyOnce: true
+          })
+      }
+    },
+    getUserScoreboard: function(){
+      if (this.user.loggedIn){
+        let refArr = getScoreboard(this.user.data.displayName);
+        
+        if (refArr != undefined){
+          
+          onValue(refArr[0], (snapshot) => {
+          console.log('snapshot', snapshot)
+          snapshot.forEach((childSnapshot) => {
+            console.log('letter diff: ', childSnapshot.key);
+            console.log('val: ', childSnapshot.val());
+            this.scoreBoard.Letters[childSnapshot.key] = childSnapshot.val();
+            })
+          }, {
+            onlyOnce: true
+          })
+
+          onValue(refArr[1], (snapshot) => {
+          console.log('snapshot', snapshot)
+          snapshot.forEach((childSnapshot) => {
+            console.log('number diff: ', childSnapshot.key);
+            console.log('val: ', childSnapshot.val());
+            this.scoreBoard.Numbers[childSnapshot.key] = childSnapshot.val();
+            })
+          }, {
+            onlyOnce: true
+          })
+
+          onValue(refArr[2], (snapshot) => {
+          console.log('snapshot', snapshot)
+          snapshot.forEach((childSnapshot) => {
+            console.log('colors diff: ', childSnapshot.key);
+            console.log('val: ', childSnapshot.val());
+            this.scoreBoard.Colors[childSnapshot.key] = childSnapshot.val();
+            })
+          }, {
+            onlyOnce: true
+          })
+
+          onValue(refArr[3], (snapshot) => {
+          console.log('snapshot', snapshot)
+          snapshot.forEach((childSnapshot) => {
+            console.log('phd diff: ', childSnapshot.key);
+            console.log('val: ', childSnapshot.val());
+            this.scoreBoard.PHD[childSnapshot.key] = childSnapshot.val();
+            })
+          }, {
+            onlyOnce: true
+          })
+
+          console.log('retrieved user ' + this.user.data.displayName + ' scoreboard');
+        } else {
+          this.updateUserScoreboard();
+        }
+        
+      }
+    },
+    updateUserScoreboard: function(){
+      if (this.user.loggedIn){
+       writeScoreboard(this.user.data.displayName, this.scoreBoard);
+       console.log('wrote scoreboard to user ' + this.user.data.displayName);
+      }
+    },
     
     getScore: function(){
       console.log("getting score of " + this.gm + " " + this.diff);
@@ -154,6 +287,7 @@ export default {
       }
     },
     updateScoreboard: function(time){
+      this.getUserScoreboard();
       time = Math.round(time * 100)/100;
       let index = Number(this.diff)-1;
       let stb = 0;
@@ -172,14 +306,17 @@ export default {
           case "PHD": this.scoreBoard.PHD[index] = time; break;
           default: console.log("error: gm not set"); break;
         }
+        this.updateUserScoreboard();
       }
       this.sb = this.generate_scoreboard();
     },
+
     sb_toggle: function(){
-      if (this.user.data.scoreboard != null){
-        this.scoreBoard = this.user.data.scoreboard;
-      }
+      console.log("toggling scoreboard");
+      this.getUserScoreboard();
+      this.sb = this.generate_scoreboard();
       if (this.sbButton == "Show Scoreboard"){
+        this.sb = this.generate_scoreboard();
         this.sbButton = "Hide Scoreboard";
         document.getElementById("sb").className = "visible";
       } else {
@@ -190,6 +327,16 @@ export default {
 
     checkMove: function(e) {
       window.console.log("Future index: " + e.draggedContext.futureIndex);
+    },
+    updateNumSets: function(){
+      switch(this.diff){
+        case "1": this.numSets = 1; break;
+        case "2": this.numSets = 1; break;
+        case "3": this.numSets = 2; break;
+        case "4": this.numSets = 2; break;
+        case "5": this.numSets = 3; break;
+        default: break;
+      }
     },
 
     romanize: function(num) {
@@ -330,6 +477,7 @@ export default {
     updateVals: function(difficulty, gm){
       this.diff = difficulty;
       this.gm = gm;
+      this.updateNumSets();
       if (difficulty != 'Difficulty' && gm != 'Gamemode'){
         this.currentHighscore = this.getScore();
         console.log("current highscore = " + this.currentHighscore);
@@ -518,12 +666,20 @@ export default {
           this.message = "Sort from highest to lowest!";
         }
       }
+      switch(this.diff){
+        case 1: this.numSets = 1; break;
+        case 2: this.numSets = 1; break;
+        case 3: this.numSets = 2; break;
+        case 4: this.numSets = 2; break;
+        case 5: this.numSets = 3; break;
+      }
       
       
       document.getElementById("dropContent").className = "gone";
       document.getElementById("play").className = "gone";
       document.getElementById("reset").className = "gone";
       document.getElementById("sbButton").className = "gone";
+      document.getElementById("timer").className = "visible";
       this.timerEnabled = true;
       
       
@@ -546,13 +702,17 @@ export default {
         document.getElementById("play").className = "visible";
         document.getElementById("reset").className = "gone";
         document.getElementById("sbButton").className = "visible";
+        document.getElementById("timer").className = "gone";
         
         
       } else {
         this.change_all_color('light blue');
         console.log("error: game running");
       }
-    }
+    }, 
+    onBeforeMount: function() {
+      this.getUserScoreboard();
+    },
   }
 
   
@@ -587,9 +747,7 @@ window.onclick = function(event) {
 }
 
 
-onBeforeMount(() => {
-  
-})
+
 
 onBeforeUpdate(() => {
  })
@@ -608,7 +766,7 @@ onBeforeUpdate(() => {
 <template>
   <div id="menuContent">
     <h1> {{  message }}</h1>
-    <button id = "reset" class = "gone" @click="reset()">Reset</button>
+    <button id="reset" class="gone" @click="reset()">Reset</button>
     <div id="dropContent">
       <h2>Gamemode: </h2>
       <div class="dropdown">
@@ -647,7 +805,7 @@ onBeforeUpdate(() => {
         
       </div>
     </div>
-    <button id = "play" class = "gone" @click="gameloop(difficulty, gamemode)">Play!</button>
+    <button id="play" class="gone" @click="gameloop(difficulty, gamemode)">Play!</button>
     
     
   </div>
@@ -655,8 +813,8 @@ onBeforeUpdate(() => {
   <div id="gameContent">
     <div class="col-6">
       
-        <h5 id="timer">{{setsCleared}} / {{numSets}} : {{ Math.round(timerCount*100)/100 }}</h5>
-        <button id = "next" class = "gone" @click="play()">Next</button>
+        <h5 id="timer" class="gone">{{setsCleared}} / {{numSets}} : {{ Math.round(timerCount*100)/100 }}</h5>
+        <button id="next" class="gone" @click="play()">Next</button>
           <h4><draggable
             :list="list"
             :disabled="!enabled"
@@ -852,10 +1010,12 @@ h6 {
 
 #next{
   margin-left: 0px;
+  display: block;
   
 }
 #timer{
-  width: 120px;
+  width: 25vw;
+  display: block;
 }
 
 #menuContent{
