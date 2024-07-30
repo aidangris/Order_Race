@@ -1,6 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getAuth } from 'firebase/auth';
-import { getDatabase, ref, set, onValue } from "firebase/database";
+import { getDatabase, ref, set, onValue, update } from "firebase/database";
 
 
 
@@ -25,28 +25,37 @@ const db = getDatabase(app);
 
 
 function writeScoreboard(name, scoreboard) {
-    const db = getDatabase();
     set(ref(db, 'users/' + name), {
         scoreboard: scoreboard
     });
 }
 
 function writeDailyChallenge(name, gamemode, diff, order) {
-    const db = getDatabase();
+    console.log("writing daily challenge " + name);
     set(ref(db, 'daily_challenge/' + name), {
         gamemode: gamemode,
         difficulty: diff,
-        order: order
+        order: order,
+        scoreboard: "Be the first person on the scoreboard today!"
+    });
+}
+
+function writeDCscoreboard(name, sb) {
+    console.log("writing daily challenge " + sb + " to " + name + " scoreboard");
+    update(ref(db, 'daily_challenge/' + name), {
+
+        scoreboard: sb
     });
 }
 
 function getDailyChallenge(name) {
     const gmRef = ref(db, 'daily_challenge/' + name + '/gamemode');
-    const diffRef = ref(db, 'users/' + name + '/difficulty');
-    const orderRef = ref(db, 'users/' + name + '/difficulty');
+    const diffRef = ref(db, 'daily_challenge/' + name + '/difficulty');
+    const orderRef = ref(db, 'daily_challenge/' + name + '/order');
+    const sbRef = ref(db, 'daily_challenge/' + name + '/scoreboard');
 
 
-    let arr = [gmRef, diffRef, orderRef];
+    let arr = [gmRef, diffRef, orderRef, sbRef];
 
     return arr;
 }
@@ -62,4 +71,4 @@ function getScoreboard(name) {
     return arr;
 }
 
-export { app, auth, db, writeScoreboard, getScoreboard, writeDailyChallenge, getDailyChallenge }
+export { app, auth, db, writeScoreboard, writeDCscoreboard, getScoreboard, writeDailyChallenge, getDailyChallenge }

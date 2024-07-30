@@ -3,7 +3,8 @@
 
 import { useStore } from 'vuex';
 import {computed} from "vue";
-import { auth } from './firebaseConfig'
+import { auth } from './firebaseConfig';
+//import { playDC } from './components/Game.vue';
 
 
 const store = useStore();
@@ -53,6 +54,12 @@ auth.onAuthStateChanged(user => {
             Profile
           </router-link>
         </li>
+        <!--<li class="nav-item">
+          <button class="nav-link" @click="playDC()">
+            <font-awesome-icon icon="rocket" />
+            Daily Challenge
+          </button> 
+        </li>-->
       </div>
     
 
@@ -109,7 +116,7 @@ body{
 
 #navbar{
   margin-top: 0px;
-  margin-left: -150px;
+  margin-left: -160px;
   height: 100vh;
   width: 20vw;
   padding: 0px;

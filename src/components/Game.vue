@@ -9,7 +9,7 @@ import { VueDraggableNext } from 'vue-draggable-next';
 import { evaluate } from 'mathjs'
 import { useStore } from 'vuex';
 import {computed} from "vue";
-import { db, getScoreboard, writeScoreboard, getDailyChallenge, writeDailyChallenge } from '../firebaseConfig.js';
+import { db, getScoreboard, writeScoreboard, getDailyChallenge, writeDailyChallenge, writeDCscoreboard } from '../firebaseConfig.js';
 import { child, onValue, push } from 'firebase/database';
 //import { rotate } from 'pngjs'
 //let id = 0;
@@ -19,6 +19,16 @@ export default {
     draggable: VueDraggableNext,
     //math: mathJS
   },
+  /*setup(){
+    //let gamemode = ref('Gamemode');
+    //let difficulty = ref('Difficulty');
+
+
+
+
+    // Close the dropdown menu if the user clicks outside of it
+    
+  },*/
   data() {
     return {
       enabled: true,
@@ -54,14 +64,16 @@ export default {
         "PHD": [0,0,0,0,0]
       },
       sb: "Numbers:\n1: 0\n2: 0\n3: 0\n4: 0\n5: 0\n\nLetters:\n1: 0\n2: 0\n3: 0\n4: 0\n5: 0\n\nColors:\n1: 0\n2: 0\n3: 0\n4: 0\n5: 0\n\nPHD:\n1: 0\n2: 0\n3: 0\n4: 0\n5: 0",
+      dcsb: "",
       sbButton: "Show Scoreboard",
       order: "Lowest to Highest",
+      orderList: ["Lowest to Highest", "Highest to Lowest"],
       timerEnabled: false,
       menuTimer: true,
       startScoreboard: true,
       dcGamemode: "",
       dcDiff: "",
-      cdOrder: "",
+      dcOrder: "",
       dailyChallengeClock: true,
       now: "",
       store: useStore(),
@@ -86,11 +98,10 @@ export default {
                     this.now = new Date();
                     let str = String(this.now);
                     let arr = str.split(" ");
-                    str = arr[0] + " " + arr[1] + " " + arr[2];
-                    console.log("current time = " + str);
-                    if (getDailyChallenge() == undefined){
-                      writeDailyChallenge();
-                    }
+                    str = arr[0] + " " + arr[1] + " " + arr[2]/* + " " + arr[5]*/;
+                    this.now = str;
+                    console.log("current time = " + this.now);
+                    this.getDC();
                   }, 10000);
                 }
                 },
@@ -110,7 +121,16 @@ export default {
                   setTimeout(() => {
                     if (value > 0 && this.startScoreboard) {
                       this.getUserScoreboard();
-                      console.log("loaded user scoreboard");
+
+
+                      this.now = new Date();
+                      let str = String(this.now);
+                      let arr = str.split(" ");
+                      str = arr[0] + " " + arr[1] + " " + arr[2]/* + " " + arr[5]*/;
+                      this.now = str;
+                      this.getDC();
+
+                      console.log("loaded user scoreboard and retrieved/generated daily challenge");
                       this.startScoreboard = false;
                     }
                   }, 1000);
@@ -142,6 +162,9 @@ export default {
                                 this.timerEnabled = false;
                                 this.setsCleared = 1;
                                 this.updateScoreboard(this.timerCount);
+                                if (this.gm == this.dcGamemode && this.diff == this.dcDiff && this.order == this.dcOrder){
+                                  this.writeDCSB(Math.round(this.timerCount * 100)/100);
+                                }
                                 document.getElementById("reset").className = "visible";
                                 //this.timerCount = 0;
                               } else {
@@ -194,23 +217,97 @@ export default {
     writeDC: function(){
       let gm = this.gmList[Math.floor(Math.random() * 4)];
       let diff = String(Math.floor(Math.random() * 5) + 1);
-      writeDailyChallenge(this.now, gm, diff);
+      let order = this.orderList[Math.floor(Math.random() * 2)];
+      writeDailyChallenge(this.now, gm, diff, order);
+      console.log("created daily challenge " + this.now + ": " + gm + " " + diff + " " + order);
+    },
+    writeDCSB: function(score){
+      console.log("checking " + this.user.data.displayName + " " + score + " in scoreboard");
+      let didreplace = false;
+      let result = "";
+      if (this.dcsb[0] == "1"){
+        let sbarr = this.dcsb.split('\n');
+        for (let i = 0; i < 10; i ++){
+          let sbitem = sbarr[i].split(' ');
+          console.log("comparing " + parseFloat(score) + " to " + sbitem[2]);
+          if (didreplace){
+            sbitem[0] = i+1 + '.';
+            sbarr[i] = sbitem.join(' ');
+          }
+          if ((parseFloat(score) < parseFloat(sbitem[2]) || sbitem[2] == undefined) && !didreplace){
+            let item = i+1 + '. ' + this.user.data.displayName + ': ' + score;
+            sbarr.splice(i, 0, item);
+            didreplace = true;
+            console.log("inserted " + item + " in scoreboard position " + i);
+            result = sbarr.join('\n');
+            console.log(result);
+          }
+          
+        }
+        if (didreplace){
+          sbarr.splice(10, 1);
+          result = sbarr.join('\n');
+          console.log(result);
+          writeDCscoreboard(this.now, result);
+        }
+        
+      } else {
+        let sbarr = ['1. ' + this.user.data.displayName + ': ' + score];
+        for (let i = 1; i < 10; i ++){
+          sbarr[i] = i+1 + '. ';
+        }
+        writeDCscoreboard(this.now, sbarr.join('\n'));
+        console.log("wrote to dc scoreboard: " + this.user.data.displayName + " " + score);
+      }
+      
+      
     },
     getDC: function(){
       let refArr = getDailyChallenge(this.now);
+      console.log("retrieved daily challenge: " + refArr);
       if (refArr != undefined){
         onValue(refArr[0], (snapshot) => {
-          console.log('snapshot', snapshot)
-          snapshot.forEach((childSnapshot) => {
-            console.log('childSnapshot.key: ', childSnapshot.key);
-            console.log('childSnapshot.val(): ', childSnapshot.val());
-            this.scoreBoard.Letters[childSnapshot.key] = childSnapshot.val();
-            })
-          }, {
-            onlyOnce: true
-          })
+          console.log('dc gm: ', snapshot.val());
+          if (snapshot.val() == null){
+            this.writeDC();
+            return 0;
+          }
+          this.dcGamemode = snapshot.val();
+        }, {
+          onlyOnce: true
+        })
+        onValue(refArr[1], (snapshot) => {
+          this.dcDiff = snapshot.val();
+          console.log('dc diff: ', snapshot.val());
+        }, {
+          onlyOnce: true
+        })
+        onValue(refArr[2], (snapshot) => {
+          this.dcOrder = snapshot.val();
+          console.log('dc order: ', snapshot.val());
+        }, {
+          onlyOnce: true
+        })
+        onValue(refArr[3], (snapshot) => {
+          this.dcsb = snapshot.val();
+          console.log('dc sb: ', snapshot.val());
+        }, {
+          onlyOnce: true
+        })
+      } else {
+        this.writeDC();
       }
     },
+    playDC: function() {
+      if (this.dcDiff != null){
+        console.log("setting menu to dc");
+        this.diff = this.dcDiff;
+        this.gm = this.dcGamemode;
+        this.order = this.dcOrder;
+        this.updateVals(this.diff, this.gm)
+      }
+    },
+
     getUserScoreboard: function(){
       if (this.user.loggedIn){
         let refArr = getScoreboard(this.user.data.displayName);
@@ -218,10 +315,10 @@ export default {
         if (refArr != undefined){
           
           onValue(refArr[0], (snapshot) => {
-          console.log('snapshot', snapshot)
+          //console.log('snapshot', snapshot)
           snapshot.forEach((childSnapshot) => {
-            console.log('letter diff: ', childSnapshot.key);
-            console.log('val: ', childSnapshot.val());
+            //console.log('letter diff: ', childSnapshot.key);
+            //console.log('val: ', childSnapshot.val());
             this.scoreBoard.Letters[childSnapshot.key] = childSnapshot.val();
             })
           }, {
@@ -229,10 +326,10 @@ export default {
           })
 
           onValue(refArr[1], (snapshot) => {
-          console.log('snapshot', snapshot)
+          //console.log('snapshot', snapshot)
           snapshot.forEach((childSnapshot) => {
-            console.log('number diff: ', childSnapshot.key);
-            console.log('val: ', childSnapshot.val());
+            //console.log('number diff: ', childSnapshot.key);
+            //console.log('val: ', childSnapshot.val());
             this.scoreBoard.Numbers[childSnapshot.key] = childSnapshot.val();
             })
           }, {
@@ -240,10 +337,10 @@ export default {
           })
 
           onValue(refArr[2], (snapshot) => {
-          console.log('snapshot', snapshot)
+          //console.log('snapshot', snapshot)
           snapshot.forEach((childSnapshot) => {
-            console.log('colors diff: ', childSnapshot.key);
-            console.log('val: ', childSnapshot.val());
+            //console.log('colors diff: ', childSnapshot.key);
+           // console.log('val: ', childSnapshot.val());
             this.scoreBoard.Colors[childSnapshot.key] = childSnapshot.val();
             })
           }, {
@@ -251,10 +348,10 @@ export default {
           })
 
           onValue(refArr[3], (snapshot) => {
-          console.log('snapshot', snapshot)
+          //console.log('snapshot', snapshot)
           snapshot.forEach((childSnapshot) => {
-            console.log('phd diff: ', childSnapshot.key);
-            console.log('val: ', childSnapshot.val());
+            //console.log('phd diff: ', childSnapshot.key);
+            //console.log('val: ', childSnapshot.val());
             this.scoreBoard.PHD[childSnapshot.key] = childSnapshot.val();
             })
           }, {
@@ -314,14 +411,16 @@ export default {
     sb_toggle: function(){
       console.log("toggling scoreboard");
       this.getUserScoreboard();
-      this.sb = this.generate_scoreboard();
+      let usersb = this.generate_scoreboard();
       if (this.sbButton == "Show Scoreboard"){
-        this.sb = this.generate_scoreboard();
+        usersb = this.generate_scoreboard();
         this.sbButton = "Hide Scoreboard";
-        document.getElementById("sb").className = "visible";
+        this.sb = this.dcsb;
+        //document.getElementById("sb").className = "visible";
       } else {
         this.sbButton = "Show Scoreboard";
-        document.getElementById("sb").className = "gone";
+        this.sb = usersb;
+        //document.getElementById("sb").className = "gone";
       }
     },
 
@@ -627,7 +726,7 @@ export default {
       let box = document.getElementById(color);
       if (box != null){
         box.style.backgroundColor = color;
-        box.style.color = color;
+        box.style.color = "transparent";
         return true;
       } else {
         console.log("can't change color");
@@ -650,17 +749,17 @@ export default {
     },
 
     gameloop: function(difficulty, gm){
-      this.diff = difficulty;
-      this.gm = gm;
-      console.log('set diff to ' + this.diff + ' and gm to ' + this.gm);
+      //this.diff = difficulty;
+      //this.gm = gm;
+      //console.log('set diff to ' + this.diff + ' and gm to ' + this.gm);
       if (this.order == 'Lowest to Highest'){
-        if (gm == "Colors"){
+        if (this.gm == "Colors"){
           this.message = "Sort in ROYGBIV!";
         } else {
           this.message = "Sort from lowest to highest!";
         }
       } else {
-        if (gm == "Colors"){
+        if (this.gm == "Colors"){
           this.message = "Sort in VIBGYOR!";
         } else {
           this.message = "Sort from highest to lowest!";
@@ -680,6 +779,10 @@ export default {
       document.getElementById("reset").className = "gone";
       document.getElementById("sbButton").className = "gone";
       document.getElementById("timer").className = "visible";
+      document.getElementById("dcbutton").className = "gone";
+      document.getElementById("sb").className = "gone";
+      this.updateVals(this.diff, this.gm);
+      this.dailyChallengeClock = false;
       this.timerEnabled = true;
       
       
@@ -703,16 +806,16 @@ export default {
         document.getElementById("reset").className = "gone";
         document.getElementById("sbButton").className = "visible";
         document.getElementById("timer").className = "gone";
-        
+        document.getElementById("dcbutton").className = "visible";
+        document.getElementById("sb").className = "visible";
+        this.getDC();
+        this.dailyChallengeClock = true;
         
       } else {
         this.change_all_color('light blue');
         console.log("error: game running");
       }
     }, 
-    onBeforeMount: function() {
-      this.getUserScoreboard();
-    },
   }
 
   
@@ -724,27 +827,20 @@ export default {
 
 <script setup>
 
-
-
-let gamemode = ref('Gamemode');
-let difficulty = ref('Difficulty');
-
-
-
-
-// Close the dropdown menu if the user clicks outside of it
 window.onclick = function(event) {
-  if (!event.target.matches('.dropbtn')) {
-    var dropdowns = document.getElementsByClassName("dropdown-content");
-    var i;
-    for (i = 0; i < dropdowns.length; i++) {
-      var openDropdown = dropdowns[i];
-      if (openDropdown.classList.contains('show')) {
-        openDropdown.classList.remove('show');
+      if (!event.target.matches('.dropbtn')) {
+        var dropdowns = document.getElementsByClassName("dropdown-content");
+        var i;
+        for (i = 0; i < dropdowns.length; i++) {
+          var openDropdown = dropdowns[i];
+          if (openDropdown.classList.contains('show')) {
+            openDropdown.classList.remove('show');
+          }
+        }
       }
     }
-  }
-}
+
+
 
 
 
@@ -760,6 +856,7 @@ onBeforeUpdate(() => {
 
 //})
 
+
 </script>
 
 
@@ -767,42 +864,49 @@ onBeforeUpdate(() => {
   <div id="menuContent">
     <h1> {{  message }}</h1>
     <button id="reset" class="gone" @click="reset()">Reset</button>
+    <button id="dcbutton" class="visible" @click="playDC()">Daily Challenge</button>
     <div id="dropContent">
-      <h2>Gamemode: </h2>
-      <div class="dropdown">
-        <button @click="gamemodedrop(); updateVals(difficulty, gamemode)" class="dropbtn">{{ gamemode }}</button>
-        
-          <div id="gamemode" class="dropdown-content">
-            <a href="#" @click="gamemode = 'Letters'; updateVals(difficulty, gamemode)">Letters</a>
-            <a href="#" @click="gamemode = 'Numbers'; updateVals(difficulty, gamemode)">Numbers</a>
-            <a href="#" @click="gamemode = 'Colors'; updateVals(difficulty, gamemode)">Colors</a>
-            <a href="#" @click="gamemode = 'PHD'; updateVals(difficulty, gamemode)">PHD</a>
-          </div>
-        
+      <div id="dropItem">
+        <h2>Gamemode: </h2>
+        <div class="dropdown">
+          <button @click="gamemodedrop(); updateVals(diff, gm)" class="dropbtn">{{ gm }}</button>
+          
+            <div id="gamemode" class="dropdown-content">
+              <a href="#" @click="gm = 'Letters'; updateVals(diff, gm)">Letters</a>
+              <a href="#" @click="gm = 'Numbers'; updateVals(diff, gm)">Numbers</a>
+              <a href="#" @click="gm = 'Colors'; updateVals(diff, gm)">Colors</a>
+              <a href="#" @click="gm = 'PHD'; updateVals(diff, gm)">PHD</a>
+            </div>
+          
+        </div>
       </div>
-      <h2>Difficulty:</h2>
-      <div class="dropdown">
-        <button @click="difficultydrop(); updateVals(difficulty, gamemode)" class="dropbtn">{{ difficulty }}</button>
-        
-          <div id="difficulty" class="dropdown-content">
-            <a href="#" @click="difficulty = '1'; updateVals(difficulty, gamemode)">1</a>
-            <a href="#" @click="difficulty = '2'; updateVals(difficulty, gamemode)">2</a>
-            <a href="#" @click="difficulty = '3'; updateVals(difficulty, gamemode)">3</a>
-            <a href="#" @click="difficulty = '4'; updateVals(difficulty, gamemode)">4</a>
-            <a href="#" @click="difficulty = '5'; updateVals(difficulty, gamemode)">5</a>
-          </div>
-        
+      <div id="dropItem">
+        <h2>Difficulty:</h2>
+        <div class="dropdown">
+          <button @click="difficultydrop(); updateVals(diff, gm)" class="dropbtn">{{ diff }}</button>
+          
+            <div id="difficulty" class="dropdown-content">
+              <a href="#" @click="diff = '1'; updateVals(diff, gm)">1</a>
+              <a href="#" @click="diff = '2'; updateVals(diff, gm)">2</a>
+              <a href="#" @click="diff = '3'; updateVals(diff, gm)">3</a>
+              <a href="#" @click="diff = '4'; updateVals(diff, gm)">4</a>
+              <a href="#" @click="diff = '5'; updateVals(diff, gm)">5</a>
+            </div>
+          
+        </div>
       </div>
-      <h2>Order:</h2>
-      <div class="dropdown">
-        <button @click="orderdrop();" class="dropbtn">{{ order }}</button>
-        
-          <div id="order" class="dropdown-content">
-            <a href="#" @click="order = 'Lowest to Highest'; ">Lowest to Highest</a>
-            <a href="#" @click="order = 'Highest to Lowest'; ">Highest to Lowest</a>
-            
-          </div>
-        
+      <div id="dropItem">
+        <h2>Order:</h2>
+        <div class="dropdown">
+          <button @click="orderdrop(); updateVals(diff, gm)" class="dropbtn">{{ order }}</button>
+          
+            <div id="order" class="dropdown-content">
+              <a href="#" @click="order = 'Lowest to Highest'; updateVals(diff, gm)">Lowest to Highest</a>
+              <a href="#" @click="order = 'Highest to Lowest'; updateVals(diff, gm)">Highest to Lowest</a>
+              
+            </div>
+          
+        </div>
       </div>
     </div>
     <button id="play" class="gone" @click="gameloop(difficulty, gamemode)">Play!</button>
@@ -846,7 +950,7 @@ onBeforeUpdate(() => {
 
   <div id="scoreBar">
     <button id = "sbButton" class = "visible" @click="sb_toggle()">{{ sbButton }}</button>
-    <h6 id="sb" class = "gone">{{ sb }}</h6>
+    <h6 id="sb" class = "visible">{{ sb }}</h6>
   </div>
   
     
@@ -1008,6 +1112,17 @@ h6 {
   height: 40px;
 }
 
+#dcbutton{
+  display: inline;
+  margin-bottom: 20px;
+}
+
+#dropItem{
+  display: block;
+  float: center;
+  margin-bottom: 20px;
+}
+
 #next{
   margin-left: 0px;
   display: block;
@@ -1032,7 +1147,7 @@ h6 {
 #rightBar{
   float: left;
   display: inline;
-  width: 20vw;
+  width: 18vw;
   
 }
 #scoreBar{
