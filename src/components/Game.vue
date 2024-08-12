@@ -45,6 +45,7 @@ export default {
         { name: "10", id: 9 }
       ],
       dragging: false,
+      hint_given: false,
       timerCount: 0.0,
       setsCleared: 1,
       numSets: 1,
@@ -54,6 +55,10 @@ export default {
       diff: "Difficulty",
       gmList: ["Numbers", "Letters", "Colors", "PHD"],
       colors: ["red", "orange", "yellow", "lime", "green", "teal", "aqua", "blue", "indigo", "violet"],
+      inventionList: ["Airplane", "Glasses", "Bicycle", "Camera", "Dishwasher", "Lightbulb", "Ferris Wheel", "Helicopter", "Microscope", "Radio", "Refrigerator", "Rocket Engine", "Steamboat", "Telephone", "Television", "Telescope", "Vacuum Cleaner", "Scissors", "Ruler", "Rubber", "Saddle", "Crossbow", "Catapult", "Water Wheel", "Paper", "Compass", "Toilet Paper", "Toothbrush", "Gunpowder", "Fireworks", "Cannon", "Printing Press", "Piano", "Steam Car", "Atom Bomb", "Personal Computer", "Game Console", "Rubik's Cube", "GPS", "Space Shuttle", "Internet", "Smartphone", "Quantum Computer", "Tank"],
+      inventionDate: ["1930", "1286", "1816", "1888", "1886", "1878", "1893", "1939", "1677", "1895", "1913", "1926", "1807", "1876", "1909", "1609", "1901", "2000 BC", "2650 BC", "1400 BC", "700 BC", "650 BC", "485 BC", "350 BC", "250 BC", "200 BC", "589", "619", "800", "960", "1326", "1439", "1709", "1769", "1945", "1957", "1972", "1974", "1978", "1981", "1989", "1994", "2010", "1915"],
+      historicalFigures: ["Joan of Arc", "John Lennon", "Charles Darwin", "Albert Einstein", "Mahatma Gandhi", "Nelson Mandella", "Shakespeare", "Van Gogh", "Mozart", "Hellen Keller", "Da Vinci", "Johnny Appleseed", "Isaac Newton", "Beethoven", "Aristotle", "Alexander the Great", "Cleopatra", "Jesus Christ", "Neil Armstrong", "Tom Hanks", "Genghis Khan", "Julius Caesar", "Socrates"],
+      historicalFiguresBday: ["1412", "1940", "1809", "1879", "1869", "1918", "1564", "1853", "1756", "1880", "1452", "1774", "1642", "1770", "384 BC", "356 BC", "69 BC", "5 BC", "1930", "1956", "1162", "100 BC", "468 BC"],
       message: "Choose a gamemode and difficulty, then press play!",
       menuMessage: "Choose a gamemode and difficulty, then press play!",
       title: "OrderRace",
@@ -61,10 +66,13 @@ export default {
         "Numbers": [0,0,0,0,0],
         "Letters": [0,0,0,0,0],
         "Colors": [0,0,0,0,0],
+        "History": [0,0,0,0,0],
         "PHD": [0,0,0,0,0]
       },
-      sb: "Numbers:\n1: 0\n2: 0\n3: 0\n4: 0\n5: 0\n\nLetters:\n1: 0\n2: 0\n3: 0\n4: 0\n5: 0\n\nColors:\n1: 0\n2: 0\n3: 0\n4: 0\n5: 0\n\nPHD:\n1: 0\n2: 0\n3: 0\n4: 0\n5: 0",
+      sb: "",
       dcsb: "",
+      hint_penalty: 10,
+      hint_text: "Hint?\n(10s penalty)",
       sbButton: "Show Scoreboard",
       order: "Lowest to Highest",
       orderList: ["Lowest to Highest", "Highest to Lowest"],
@@ -156,6 +164,9 @@ export default {
                             this.timerCount += 0.05;
                             if (this.checkOrder()){
                               if (this.setsCleared >= this.numSets){
+                                if (this.gm == "History"){
+                                  this.show_history_dates();
+                                }
                                 console.log('victory!');
                                 this.message = "Victory!";
                                 this.change_all_color("green");
@@ -165,6 +176,7 @@ export default {
                                 if (this.gm == this.dcGamemode && this.diff == this.dcDiff && this.order == this.dcOrder){
                                   this.writeDCSB(Math.round(this.timerCount * 100)/100);
                                 }
+                                
                                 document.getElementById("reset").className = "visible";
                                 //this.timerCount = 0;
                               } else {
@@ -176,6 +188,9 @@ export default {
                                 
                               }
                               
+                            } else if (this.timerCount >= 20){
+                              this.hint_penalty = 10;
+                              document.getElementById("hint").className="visible";
                             }
                         }, 50);
                         
@@ -352,12 +367,23 @@ export default {
           snapshot.forEach((childSnapshot) => {
             //console.log('phd diff: ', childSnapshot.key);
             //console.log('val: ', childSnapshot.val());
-            this.scoreBoard.PHD[childSnapshot.key] = childSnapshot.val();
+            this.scoreBoard.History[childSnapshot.key] = childSnapshot.val();
             })
           }, {
             onlyOnce: true
           })
 
+          onValue(refArr[4], (snapshot) => {
+          //console.log('snapshot', snapshot)
+          snapshot.forEach((childSnapshot) => {
+            //console.log('phd diff: ', childSnapshot.key);
+            //console.log('val: ', childSnapshot.val());
+            this.scoreBoard.PHD[childSnapshot.key] = childSnapshot.val();
+            })
+          }, {
+            onlyOnce: true
+          })
+          
           console.log('retrieved user ' + this.user.data.displayName + ' scoreboard');
         } else {
           this.updateUserScoreboard();
@@ -392,6 +418,7 @@ export default {
         case "Numbers": stb = this.scoreBoard.Numbers[index]; break;
         case "Letters": stb = this.scoreBoard.Letters[index]; break;
         case "Colors": stb = this.scoreBoard.Colors[index]; break;
+        case "History": stb = this.scoreBoard.History[index]; break;
         case "PHD": stb = this.scoreBoard.PHD[index]; break;
         default: console.log("error: gm not set"); break;
       }
@@ -400,6 +427,7 @@ export default {
           case "Numbers": this.scoreBoard.Numbers[index] = time; break;
           case "Letters": this.scoreBoard.Letters[index] = time; break;
           case "Colors": this.scoreBoard.Colors[index] = time; break;
+          case "History": this.scoreBoard.History[index] = time; break;
           case "PHD": this.scoreBoard.PHD[index] = time; break;
           default: console.log("error: gm not set"); break;
         }
@@ -408,17 +436,43 @@ export default {
       this.sb = this.generate_scoreboard();
     },
 
+    hint_func: function(){
+      this.hint_given = true;
+      //document.getElementById("hint").className = "gone";
+      this.timerCount += this.hint_penalty;
+      this.hint_penalty += 10;
+      this.hint_text = "Hint?\n(" + this.hint_penalty + "s penalty)";
+      let arr = this.getOrder();
+      for (let i = 0; i < this.numBoxes; i ++){
+        let name = this.getSortingVal(this.list[i].name);
+        //console.log("checking val " + name + " against " + )
+        if (name == arr[i]){
+          this.change_one_color_hint(this.list[i].name);
+        }
+      }
+    },
+    show_history_dates: function() {
+      this.change_all_color("green");
+      for (let i = 0; i < this.numBoxes; i ++){
+        switch (this.diff){
+          case "1": this.list[i].name = this.list[i].name + " - " + this.inventionDate[this.inventionList.indexOf(this.list[i].name)]; break;
+          case "2": this.list[i].name = this.list[i].name + " - " + this.historicalFiguresBday[this.historicalFigures.indexOf(this.list[i].name)]; break;
+        }
+      }
+    },
+
     sb_toggle: function(){
       console.log("toggling scoreboard");
       this.getUserScoreboard();
+      this.getDC();
       let usersb = this.generate_scoreboard();
-      if (this.sbButton == "Show Scoreboard"){
+      if (this.sbButton == "User Scoreboard"){
         usersb = this.generate_scoreboard();
-        this.sbButton = "Hide Scoreboard";
+        this.sbButton = "Daily Challenge Scoreboard";
         this.sb = this.dcsb;
         //document.getElementById("sb").className = "visible";
       } else {
-        this.sbButton = "Show Scoreboard";
+        this.sbButton = "User Scoreboard";
         this.sb = usersb;
         //document.getElementById("sb").className = "gone";
       }
@@ -426,6 +480,16 @@ export default {
 
     checkMove: function(e) {
       window.console.log("Future index: " + e.draggedContext.futureIndex);
+      if (this.hint_given){
+        if (this.gm != "Colors"){
+          this.default_color();
+        } else {
+          for (let i in this.list) {
+              this.change_one_color(this.list[i].name);
+            }
+        }
+        this.hint_given = false;
+      }
     },
     updateNumSets: function(){
       switch(this.diff){
@@ -520,6 +584,7 @@ export default {
               operation = Math.floor(Math.random() * 5);
               num1 = Math.floor(Math.random() * 100);
               num2 = Math.floor(Math.random() * 100);
+              let num3 = Math.floor(Math.random() * 100);
               switch (operation){
                 case 0: result = '' + num1 + ' + ' + num2; break;
                 case 1: result = '' + num1 + ' - ' + num2; break;
@@ -529,11 +594,11 @@ export default {
               }
               operation = Math.floor(Math.random() * 5);
               switch (operation){
-                case 0: result += ' + ' + num2; break;
-                case 1: result += ' - ' + num2; break;
-                case 2: result += ' * ' + num2; break;
-                case 3: result += ' / ' + num2; break;
-                case 4: result += ' ^ ' + num2; break;
+                case 0: result += ' + ' + num3; break;
+                case 1: result += ' - ' + num3; break;
+                case 2: result += ' * ' + num3; break;
+                case 3: result += ' / ' + num3; break;
+                case 4: result += ' ^ ' + num3; break;
               }
               break;
             default: result = 'err';
@@ -548,6 +613,12 @@ export default {
             case '5': result = this.selectColor(Math.floor(Math.random() * 40), 40); break;
           }
           
+        } else if (gm == "History"){
+          switch (length){
+            case '1': result = this.inventionList[Math.floor(Math.random()*this.inventionList.length)]; break;
+            case '2': result = this.historicalFigures[Math.floor(Math.random()*this.historicalFigures.length)]; break;
+            default: console.log("gamemode not finished"); break;
+          }
         } else {
           while (counter < length) {
             switch (gm){
@@ -625,10 +696,10 @@ export default {
       for (let i = 0; i < this.numBoxes-1; i ++){
         //let id0 = this.list.find((element) => element.id == i).name;
         //let id1 = this.list.find((element) => element.id == i+1).name;
-        let id0 = this.list[i].name.toLowerCase();
-        let id1 = this.list[i+1].name.toLowerCase();
+        let id0 = this.getSortingVal(this.list[i].name);
+        let id1 = this.getSortingVal(this.list[i+1].name);
         //console.log('comparing ' + id0 + ' with ' + id1)
-        if (gm == "PHD"){
+        /*if (gm == "PHD"){
           if (diff == 2){
             id0 = this.deromanize(this.list[i].name);
             id1 = this.deromanize(this.list[i+1].name);
@@ -651,6 +722,29 @@ export default {
           }
         }
 
+        if (gm == "History"){
+          id0 = this.list[i].name;
+          id1 = this.list[i+1].name;
+          if (diff == 1){
+            let d0 = this.inventionDate[this.inventionList.indexOf(id0)];
+            let d1 = this.inventionDate[this.inventionList.indexOf(id1)];
+            //console.log(id0 + " " + d0 + "\n" + id1 + " " + d1);
+            d0 = d0.split(' ');
+            d1 = d1.split(' ');
+            if (d0.length > 1){
+              id0 = parseInt(d0[0]) * -1;
+            } else {
+              id0 = parseInt(d0[0]);
+            }
+            if (d1.length > 1){
+              id1 = parseInt(d1[0]) * -1;
+            } else {
+              id1 = parseInt(d1[0]);
+            }
+          }
+        }*/
+        
+
         if (this.order == 'Lowest to Highest'){
           if (id0 > id1){
             return false;
@@ -663,6 +757,78 @@ export default {
       }
       
       return true;
+    },
+
+    getSortingVal: function(name){
+      let gm = this.gm;
+      let diff = this.diff;
+      //let result = "";
+
+      let id0 = name.toLowerCase();
+        
+        if (gm == "PHD"){
+          if (diff == 2){
+            id0 = this.deromanize(name);
+          } else if (diff == 4 || diff == 5){
+            /*for (let x in this.list){
+              console.log(this.list[x].name + ' evaluates to ' + evaluate(this.list[x].name));
+            }*/
+            id0 = evaluate(id0);
+          }
+        }
+        
+        if (gm == "Colors"){
+          id0 = Number(id0.substring(4, id0.indexOf(',')));
+          if (diff == 1){
+            id0 = 1000 - id0;
+          }
+        }
+
+        if (gm == "History"){
+          id0 = name;
+          if (diff == 1){
+            let d0 = this.inventionDate[this.inventionList.indexOf(id0)];
+            //console.log(id0 + " " + d0 + "\n" + id1 + " " + d1);
+            d0 = d0.split(' ');
+            if (d0.length > 1){
+              id0 = parseInt(d0[0]) * -1;
+            } else {
+              id0 = parseInt(d0[0]);
+            }
+            
+          }
+          if (diff == 2){
+            let d0 = this.historicalFiguresBday[this.historicalFigures.indexOf(id0)];
+            console.log(id0 + " " + d0);
+            d0 = d0.split(' ');
+            if (d0.length > 1){
+              id0 = parseInt(d0[0]) * -1;
+            } else {
+              id0 = parseInt(d0[0]);
+            }
+            
+          }
+        }
+
+        return id0;
+    },
+    compareNumbers: function(a, b) {
+      return a - b;
+    },
+    getOrder: function(){
+      let gm = this.gm;
+      let diff = this.diff;
+      let result = [];
+      for (let i = 0; i < this.numBoxes; i ++){
+        let id0 = this.getSortingVal(this.list[i].name);
+        result.push(id0);
+      }
+      result.sort(this.compareNumbers);
+      if (this.order != "Lowest to Highest"){
+        result.reverse();
+      }
+      console.log("sorted items: " + result);
+      return result;
     },
 
     get_duplicates: function(n){
@@ -700,6 +866,10 @@ export default {
       for (let i = 0; i < 5; i++){
         sb += "" + (i+1) + ": " + this.scoreBoard.Colors[i] + "\n";
       }
+      sb += "\n History:\n";
+      for (let i = 0; i < 5; i++){
+        sb += "" + (i+1) + ": " + this.scoreBoard.History[i] + "\n";
+      }
       sb += "\nPHD:\n";
       for (let i = 0; i < 5; i++){
         sb += "" + (i+1) + ": " + this.scoreBoard.PHD[i] + "\n";
@@ -710,7 +880,7 @@ export default {
 
     change_all_color: function(color){
       console.log("changing all colors to " + color);
-      for (let i = 0; i < 10; i ++){
+      for (let i = 0; i < this.numBoxes; i ++){
         let box = document.getElementById(this.list[i].name);
         if (box != null){
           box.style.backgroundColor = color;
@@ -727,6 +897,19 @@ export default {
       if (box != null){
         box.style.backgroundColor = color;
         box.style.color = "transparent";
+        return true;
+      } else {
+        console.log("can't change color");
+        return false;
+      }
+      
+    },
+    change_one_color_hint: function(name){
+      console.log("changing color of box " + name)
+      let box = document.getElementById(name);
+      if (box != null){
+        box.style.backgroundColor = "green";
+        //box.style.color = "transparent";
         return true;
       } else {
         console.log("can't change color");
@@ -808,6 +991,8 @@ export default {
         document.getElementById("timer").className = "gone";
         document.getElementById("dcbutton").className = "visible";
         document.getElementById("sb").className = "visible";
+        document.getElementById("hint").className = "gone";
+        this.hint_penalty = 10;
         this.getDC();
         this.dailyChallengeClock = true;
         
@@ -875,6 +1060,7 @@ onBeforeUpdate(() => {
               <a href="#" @click="gm = 'Letters'; updateVals(diff, gm)">Letters</a>
               <a href="#" @click="gm = 'Numbers'; updateVals(diff, gm)">Numbers</a>
               <a href="#" @click="gm = 'Colors'; updateVals(diff, gm)">Colors</a>
+              <a href="#" @click="gm = 'History'; updateVals(diff, gm)">History</a>
               <a href="#" @click="gm = 'PHD'; updateVals(diff, gm)">PHD</a>
             </div>
           
@@ -919,6 +1105,7 @@ onBeforeUpdate(() => {
       
         <h5 id="timer" class="gone">{{setsCleared}} / {{numSets}} : {{ Math.round(timerCount*100)/100 }}</h5>
         <button id="next" class="gone" @click="play()">Next</button>
+        <button id="hint" class="gone" @click="hint_func()">{{hint_text}}</button>
           <h4><draggable
             :list="list"
             :disabled="!enabled"
@@ -1008,8 +1195,8 @@ onBeforeUpdate(() => {
 .show {display:block;}
 
 .list-group-item{
-  height: 55px;
-  width: 200px;
+  height: 8.5vh;
+  width: 25vw;
   background-color: transparent;
   border-color: transparent;
 }
@@ -1034,11 +1221,11 @@ h2 {
 h3 {
   border: 2px solid #ffffff;
   padding: 10px;
-  margin: 10px;
+  margin: 15px;
   margin-left: -20px;
   margin-top: -10px;
-  width: 200px;
-  height: 50px;
+  width: 25vw;
+  height: 8vh;
   text-align: center;
   font-weight: 500;
   color: black;
@@ -1048,7 +1235,7 @@ h3 {
 h4 {
   position: static;
   margin-top: 25px;
-  
+  height: 100vh;
 }
 
 h5 {
@@ -1063,15 +1250,16 @@ h5 {
 h6 {
   font-weight: 300;
   font-size: 0.9rem;
+  overflow-y: auto;
 }
 
 
 
 .box {
   border: 1px solid #000;
-  padding: 10px;
-  margin: 10px;
-  width: 200px;
+  padding: 15px;
+  margin: 15px;
+  width: 20vw;
   text-align: center;
   color: black;
   background-color: #f9f9f9;
@@ -1125,9 +1313,14 @@ h6 {
 
 #next{
   margin-left: 0px;
-  display: block;
+  display: inline;
   
 }
+#hint{
+  display: inline;
+  float: right;
+}
+
 #timer{
   width: 25vw;
   display: block;
@@ -1153,7 +1346,8 @@ h6 {
 #scoreBar{
   float: left;
   display: inline;
-  width: 8vw;
+  width: 10vw;
+  height: 90vh;
 }
 #sbButton{
   
@@ -1164,6 +1358,7 @@ h6 {
   display: inline;
   white-space: pre-line;
   margin-top: 25px;
+  width: 10vw;
   height: 80%;
   font-weight: 400;
   color: white;
@@ -1176,8 +1371,8 @@ h6 {
 #color_bar{
   float: left;
   display: inline;
-  margin-left: -200px;
-  margin-top: 50px;
+  margin-left: -5vw;
+  margin-top: 15vh;
   
 }
 

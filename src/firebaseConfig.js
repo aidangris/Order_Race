@@ -64,9 +64,10 @@ function getScoreboard(name) {
     const lettersRef = ref(db, 'users/' + name + '/scoreboard/Letters');
     const numbersRef = ref(db, 'users/' + name + '/scoreboard/Numbers');
     const colorsRef = ref(db, 'users/' + name + '/scoreboard/Colors');
+    const historyRef = ref(db, 'users/' + name + '/scoreboard/History');
     const phdRef = ref(db, 'users/' + name + '/scoreboard/PHD');
 
-    let arr = [lettersRef, numbersRef, colorsRef, phdRef];
+    let arr = [lettersRef, numbersRef, colorsRef, historyRef, phdRef];
 
     return arr;
 }

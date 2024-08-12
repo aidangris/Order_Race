@@ -4,6 +4,8 @@
 import { useStore } from 'vuex';
 import {computed} from "vue";
 import { auth } from './firebaseConfig';
+import FitScreen from '@fit-screen/vue';
+import { useWindowSize } from 'vue-window-size';
 //import { playDC } from './components/Game.vue';
 
 
@@ -12,15 +14,19 @@ const user = computed(() => {
     return store.getters.user;
   });
 
+const { width, height } = useWindowSize();
+
 
 auth.onAuthStateChanged(user => {
     store.dispatch("fetchUser", user);
   });
 
+
+
 </script>
 
 <template>
-  
+  <FitScreen id="screen" :width="width" :height="height" mode="fit">
   <div id="navbar">
     
       <a id="title" href="/" class="navbar-brand">OrderRace</a>
@@ -73,7 +79,7 @@ auth.onAuthStateChanged(user => {
       </div>
  
   </body>
-
+</FitScreen>
 </template>
 
 <script>
@@ -101,7 +107,7 @@ body{
   float: left;
   display: inline;
   margin-left: -0px;
-  width: 80vw;
+  width: 100vw;
   background-color: rgb(73, 70, 70);
   padding: 0px;
   background-size: cover;
@@ -114,9 +120,15 @@ body{
   width: 50%;
 }
 
+#screen{
+  margin-left: -8vw;
+}
+
 #navbar{
+  float: left;
+  display: inline;
   margin-top: 0px;
-  margin-left: -160px;
+  margin-left: 0px;
   height: 100vh;
   width: 20vw;
   padding: 0px;

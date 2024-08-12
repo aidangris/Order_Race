@@ -4,6 +4,7 @@ import { createApp } from 'vue'
 import App from './App.vue'
 import router from "./router";
 import store from "./store";
+import FitScreen from '@fit-screen/vue';
 //import AuthNav from "./components/AuthNav.vue";
 //import { domain, clientId, audience } from '../auth_config.json';
 import "bootstrap";
@@ -15,6 +16,7 @@ import { FontAwesomeIcon } from './plugins/font-awesome'
 let app = createApp(App)
     .use(router)
     .use(store)
+    //.use(FitScreen)
 
 /*.use(createAuth0({
     domain: 'dev-a6hh7q6zdg1forxw.us.auth0.com',
