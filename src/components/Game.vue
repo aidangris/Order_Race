@@ -56,9 +56,11 @@ export default {
       gmList: ["Numbers", "Letters", "Colors", "PHD"],
       colors: ["red", "orange", "yellow", "lime", "green", "teal", "aqua", "blue", "indigo", "violet"],
       inventionList: ["Airplane", "Glasses", "Bicycle", "Camera", "Dishwasher", "Lightbulb", "Ferris Wheel", "Helicopter", "Microscope", "Radio", "Refrigerator", "Rocket Engine", "Steamboat", "Telephone", "Television", "Telescope", "Vacuum Cleaner", "Scissors", "Ruler", "Rubber", "Saddle", "Crossbow", "Catapult", "Water Wheel", "Paper", "Compass", "Toilet Paper", "Toothbrush", "Gunpowder", "Fireworks", "Cannon", "Printing Press", "Piano", "Steam Car", "Atom Bomb", "Personal Computer", "Game Console", "Rubik's Cube", "GPS", "Space Shuttle", "Internet", "Smartphone", "Quantum Computer", "Tank"],
-      inventionDate: ["1930", "1286", "1816", "1888", "1886", "1878", "1893", "1939", "1677", "1895", "1913", "1926", "1807", "1876", "1909", "1609", "1901", "2000 BC", "2650 BC", "1400 BC", "700 BC", "650 BC", "485 BC", "350 BC", "250 BC", "200 BC", "589", "619", "800", "960", "1326", "1439", "1709", "1769", "1945", "1957", "1972", "1974", "1978", "1981", "1989", "1994", "2010", "1915"],
+      inventionDate: ["1930",     "1286",    "1816",    "1888",    "1886",     "1878",       "1893",         "1939",        "1677",       "1895",   "1913",       "1926",           "1807",     "1876",       "1909",       "1609",       "1901",         "2000 BC", "2650 BC", "1400 BC", "700 BC", "650 BC", "485 BC",    "350 BC",    "250 BC", "200 BC",  "589",          "619",        "800",        "960",      "1326",     "1439",         "1709",   "1769",      "1945",      "1957",              "1972",        "1974",        "1978", "1981",          "1989",      "1994",        "2010",            "1915"],
       historicalFigures: ["Joan of Arc", "John Lennon", "Charles Darwin", "Albert Einstein", "Mahatma Gandhi", "Nelson Mandella", "Shakespeare", "Van Gogh", "Mozart", "Hellen Keller", "Da Vinci", "Johnny Appleseed", "Isaac Newton", "Beethoven", "Aristotle", "Alexander the Great", "Cleopatra", "Jesus Christ", "Neil Armstrong", "Tom Hanks", "Genghis Khan", "Julius Caesar", "Socrates"],
-      historicalFiguresBday: ["1412", "1940", "1809", "1879", "1869", "1918", "1564", "1853", "1756", "1880", "1452", "1774", "1642", "1770", "384 BC", "356 BC", "69 BC", "5 BC", "1930", "1956", "1162", "100 BC", "468 BC"],
+      historicalFiguresBday: ["1412",     "1940",       "1809",           "1879",            "1869",            "1918",           "1564",         "1853",    "1756",      "1880",       "1452",       "1774",           "1642",         "1770",       "384 BC",   "356 BC",              "69 BC",      "5 BC",        "1930",           "1956",       "1162",         "100 BC",       "468 BC"],
+      presidentList: ["George Washington", "John Adams", "Thomas Jefferson", "James Madison", "James Monroe", "John Quincy Adams", "Andrew Jackson", "Martin Van Buren", "William Harrison", "John Tyler", "James K. Polk", "Zachary Taylor", "Millard Fillmore", "Franklin Pierce", "James Buchanan", "Abraham Lincoln", "Andrew Johnson", "Ulysses S. Grant", "Rutherford Hayes", "James Garfield", "Chester A. Arthur", "Grover Cleveland (1st term)", "Benjamin Harrison", "Grover Cleveland (2nd term)", "William McKinley", "Theodore Roosevelt", "William Howard Taft", "Woodrow Wilson", "Warren G. Harding", "Calvin Coolidge", "Herbert Hoover", "Franklin D. Roosevelt", "Harry S. Truman", "Dwight D. Eisenhower", "John F. Kennedy", "Lyndon B. Johnson", "Richard Nixon", "Gerald Ford", "Jimmy Carter", "Ronald Reagan", "George H. W. Bush", "Bill Clinton", "George W. Bush", "Barack Obama", "Donald Trump", "Joe Biden"],
+      presidentDates: ["1789",              "1797",       "1801",             "1809",         "1817",           "1825",             "1829",           "1837",             "1841",             "1842",         "1845",         "1849",           "1850",           "1853",             "1857",             "1861",           "1865",           "1869",             "1877",             "1881",           "1882",               "1885",                       "1889",               "1893",                       "1897",             "1901",               "1909",                 "1913",             "1921",           "1923",           "1929",             "1933",                 "1945",             "1953",                 "1961",           "1963",               "1969",             "1974",       "1977",       "1981",         "1989",             "1993",           "2001",           "2009",         "2017",         "2021"],
       message: "Choose a gamemode and difficulty, then press play!",
       menuMessage: "Choose a gamemode and difficulty, then press play!",
       title: "OrderRace",
@@ -171,7 +173,7 @@ export default {
                                 this.message = "Victory!";
                                 this.change_all_color("green");
                                 this.timerEnabled = false;
-                                this.setsCleared = 1;
+                                //this.setsCleared = 1;
                                 this.updateScoreboard(this.timerCount);
                                 if (this.gm == this.dcGamemode && this.diff == this.dcDiff && this.order == this.dcOrder){
                                   this.writeDCSB(Math.round(this.timerCount * 100)/100);
@@ -189,7 +191,7 @@ export default {
                               }
                               
                             } else if (this.timerCount >= 20){
-                              this.hint_penalty = 10;
+                              //this.hint_penalty = 10;
                               document.getElementById("hint").className="visible";
                             }
                         }, 50);
@@ -222,6 +224,11 @@ export default {
     },
     add: function(n, id) {
       this.list.push({ name: n, id: id });
+      setTimeout(() => {
+        if (n.length >= 20){
+          document.getElementById(id).style.fontSize = "1rem";
+        }
+      }, 50);
     },
     clear: function() {
       console.log('clearing');
@@ -405,6 +412,7 @@ export default {
         case "Numbers": return this.scoreBoard.Numbers[index]; break;
         case "Letters": return this.scoreBoard.Letters[index]; break;
         case "Colors": return this.scoreBoard.Colors[index]; break;
+        case "History": return this.scoreBoard.History[index]; break;
         case "PHD": return this.scoreBoard.PHD[index]; break;
         default: console.log("error: gm not set"); break;
       }
@@ -423,6 +431,7 @@ export default {
         default: console.log("error: gm not set"); break;
       }
       if (time < stb || stb == 0){
+        this.currentHighscore = time;
         switch (this.gm){
           case "Numbers": this.scoreBoard.Numbers[index] = time; break;
           case "Letters": this.scoreBoard.Letters[index] = time; break;
@@ -440,6 +449,7 @@ export default {
       this.hint_given = true;
       //document.getElementById("hint").className = "gone";
       this.timerCount += this.hint_penalty;
+      console.log("added " + this.hint_penalty + " to time");
       this.hint_penalty += 10;
       this.hint_text = "Hint?\n(" + this.hint_penalty + "s penalty)";
       let arr = this.getOrder();
@@ -452,13 +462,17 @@ export default {
       }
     },
     show_history_dates: function() {
-      this.change_all_color("green");
+      
       for (let i = 0; i < this.numBoxes; i ++){
         switch (this.diff){
           case "1": this.list[i].name = this.list[i].name + " - " + this.inventionDate[this.inventionList.indexOf(this.list[i].name)]; break;
           case "2": this.list[i].name = this.list[i].name + " - " + this.historicalFiguresBday[this.historicalFigures.indexOf(this.list[i].name)]; break;
+          case "3": this.list[i].name = this.list[i].name + " - " + this.presidentDates[this.presidentList.indexOf(this.list[i].name)]; break;
         }
       }
+      setTimeout(() => {
+        this.change_all_color("green");
+      }, 50);
     },
 
     sb_toggle: function(){
@@ -617,6 +631,7 @@ export default {
           switch (length){
             case '1': result = this.inventionList[Math.floor(Math.random()*this.inventionList.length)]; break;
             case '2': result = this.historicalFigures[Math.floor(Math.random()*this.historicalFigures.length)]; break;
+            case '3': result = this.presidentList[Math.floor(Math.random()*this.presidentList.length)]; break;
             default: console.log("gamemode not finished"); break;
           }
         } else {
@@ -698,51 +713,6 @@ export default {
         //let id1 = this.list.find((element) => element.id == i+1).name;
         let id0 = this.getSortingVal(this.list[i].name);
         let id1 = this.getSortingVal(this.list[i+1].name);
-        //console.log('comparing ' + id0 + ' with ' + id1)
-        /*if (gm == "PHD"){
-          if (diff == 2){
-            id0 = this.deromanize(this.list[i].name);
-            id1 = this.deromanize(this.list[i+1].name);
-          } else if (diff == 4 || diff == 5){
-            for (let x in this.list){
-              console.log(this.list[x].name + ' evaluates to ' + evaluate(this.list[x].name));
-            }
-            id0 = evaluate(id0);
-            id1 = evaluate(id1);
-            
-          }
-        }
-        
-        if (gm == "Colors"){
-          id0 = Number(id0.substring(4, id0.indexOf(',')));
-          id1 = Number(id1.substring(4, id1.indexOf(',')));
-          if (diff == 1){
-            id0 = 1000 - id0;
-            id1 = 1000 - id1;
-          }
-        }
-
-        if (gm == "History"){
-          id0 = this.list[i].name;
-          id1 = this.list[i+1].name;
-          if (diff == 1){
-            let d0 = this.inventionDate[this.inventionList.indexOf(id0)];
-            let d1 = this.inventionDate[this.inventionList.indexOf(id1)];
-            //console.log(id0 + " " + d0 + "\n" + id1 + " " + d1);
-            d0 = d0.split(' ');
-            d1 = d1.split(' ');
-            if (d0.length > 1){
-              id0 = parseInt(d0[0]) * -1;
-            } else {
-              id0 = parseInt(d0[0]);
-            }
-            if (d1.length > 1){
-              id1 = parseInt(d1[0]) * -1;
-            } else {
-              id1 = parseInt(d1[0]);
-            }
-          }
-        }*/
         
 
         if (this.order == 'Lowest to Highest'){
@@ -786,27 +756,18 @@ export default {
 
         if (gm == "History"){
           id0 = name;
-          if (diff == 1){
-            let d0 = this.inventionDate[this.inventionList.indexOf(id0)];
-            //console.log(id0 + " " + d0 + "\n" + id1 + " " + d1);
-            d0 = d0.split(' ');
-            if (d0.length > 1){
-              id0 = parseInt(d0[0]) * -1;
-            } else {
-              id0 = parseInt(d0[0]);
-            }
-            
+          let d0 = "";
+          switch(diff){
+            case "1": d0 = this.inventionDate[this.inventionList.indexOf(id0)]; break;
+            case "2": d0 = this.historicalFiguresBday[this.historicalFigures.indexOf(id0)]; break;
+            case "3": d0 = this.presidentDates[this.presidentList.indexOf(id0)];
           }
-          if (diff == 2){
-            let d0 = this.historicalFiguresBday[this.historicalFigures.indexOf(id0)];
-            console.log(id0 + " " + d0);
-            d0 = d0.split(' ');
-            if (d0.length > 1){
-              id0 = parseInt(d0[0]) * -1;
-            } else {
-              id0 = parseInt(d0[0]);
-            }
-            
+          
+          d0 = d0.split(' ');
+          if (d0.length > 1){
+            id0 = parseInt(d0[0]) * -1;
+          } else {
+            id0 = parseInt(d0[0]);
           }
         }
 
@@ -993,6 +954,7 @@ export default {
         document.getElementById("sb").className = "visible";
         document.getElementById("hint").className = "gone";
         this.hint_penalty = 10;
+        this.hint_text = "Hint?\n(" + this.hint_penalty + "s penalty)";
         this.getDC();
         this.dailyChallengeClock = true;
         
@@ -1228,6 +1190,7 @@ h3 {
   height: 8vh;
   text-align: center;
   font-weight: 500;
+  font-size: auto;
   color: black;
   background-color: #2345a9;
   
